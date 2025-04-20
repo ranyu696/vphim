@@ -1,0 +1,84 @@
+@startuml UC-3 Signup and Confirm Activity Diagram
+!theme plain
+skinparam ConditionStyle diamond
+
+title Signup and Confirmation Activity (UC-3)
+caption User registers using email and confirms their account
+
+|User|
+start
+:Navigate to Signup Page;
+:Enter Email and Username;
+
+|Frontend (fe)|
+:Submit Signup Data;
+:Call POST /auth/signup API;
+
+|Backend API (REST)|
+:Receive POST /auth/signup;
+:Call AuthService.signup(dto);
+|Database|
+:Check if Email Already Exists;
+if (Email Exists?) then (yes)
+  |Backend API (REST)|
+  :Throw UnprocessableEntityException (Email exists);
+  :Return 422 Error;
+  |Frontend (fe)|
+  :Show "Email already exists" Message;
+  stop
+else (no)
+  |Backend API (REST)|
+  :Generate Confirmation Hash (JWT);
+  |Database|
+  :Create New User Document (unconfirmed);
+  :Store User Data;
+  |Backend API (REST)|
+  :Queue Confirmation Email (MailQueue);
+  note right: Email contains confirmation link with hash
+  :Return 204 No Content (Success);
+  |Frontend (fe)|
+  :Show "Check Email for Confirmation" Message;
+
+  |User|
+  :Receive Confirmation Email;
+  :Click Confirmation Link;
+
+  |Frontend (fe)|
+  :Receive Hash from URL;
+  :Call POST /auth/signup/confirm API;
+
+  |Backend API (REST)|
+  :Receive POST /auth/signup/confirm;
+  :Call AuthService.confirm(hash);
+  :Verify JWT Hash;
+  if (Invalid Hash?) then (yes)
+    :Throw UnprocessableEntityException (Invalid hash);
+    :Return 422 Error;
+    |Frontend (fe)|
+    :Show "Invalid/Expired Link" Message;
+    stop
+  else (no)
+    |Database|
+    :Find User by ID from Hash;
+    if (User Not Found or Already Confirmed?) then (yes)
+      |Backend API (REST)|
+      :Throw UnprocessableEntityException;
+      :Return 422 Error;
+      |Frontend (fe)|
+      :Show "Invalid/Expired Link" Message;
+      stop
+    else (no)
+      |Database|
+      :Update User: emailVerified = true;
+      :Save User Document;
+      |Backend API (REST)|
+      :Return 204 No Content (Success);
+      |Frontend (fe)|
+      :Show "Account Confirmed" Message;
+      :Redirect to Login Page;
+      stop
+    endif
+  endif
+endif
+
+@enduml

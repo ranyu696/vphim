@@ -1,0 +1,224 @@
+@startuml UC-9 Movie Management Activity Diagram
+
+!theme plain
+skinparam ConditionStyle diamond
+
+title Movie Management Activity (Admin - UC-9)
+caption Admin manages movie entries via the Management (`mnt`) frontend
+
+|Admin User|
+start
+:Navigate to Movie Management Section;
+
+' --- List Movies (UC-9.2 View - List) ---
+partition "List Movies" {
+  |Frontend (mnt)|
+  :Load Movie Table Component (`MovieTableMnt`);
+  :Call moviesForAdmin Query (via useTable);
+  note right: Sends pagination, sorting, \nand permanent filters (e.g., isDeleted)
+
+  |Backend API|
+  :Receive moviesForAdmin Query;
+  :Call MovieService.getMoviesEs(input, false, true);
+  :Check Cache (Skip if bypass/reset requested);
+  if (Cache Miss or Bypass/Reset) then (yes)
+    :Build Elasticsearch Query (Admin specific);
+    |Elasticsearch|
+    :Execute Search Query;
+    :Return Paginated Results;
+    |Backend API|
+    :Store in Cache (if applicable);
+    :Return Formatted Results;
+  else (Cache Hit)
+    |Redis Cache|
+    :Return Cached Results;
+    |Backend API|
+    :Return Formatted Results;
+  endif
+
+  |Frontend (mnt)|
+  :Receive Movie List Data;
+  :Display Movie Table with Actions (Edit, Show, Delete);
+  :Display Filter Options (Search, Category, Status, etc.);
+}
+
+' --- Filter/Search Movies ---
+partition "Filter/Search Movies" {
+  |Admin User|
+  :Enter Keywords in Search Box;
+  :OR
+  :Open Filter Drawer;
+  :Select Filter Values (Category, Status, Year, etc.);
+  :Apply Filters;
+
+  |Frontend (mnt)|
+  :Update Table Filters (via setFilters from useTable);
+  :Trigger Refetch of moviesForAdmin Query;
+  -> List Movies;
+}
+
+' --- Create Movie (UC-9.1) ---
+partition "Create Movie" {
+  |Admin User|
+  :Click "Create Movie" Button;
+
+  |Frontend (mnt)|
+  :Load Movie Create Page (`MovieCreatePage`);
+  :Display Movie Form Component (`MovieForm`);
+  note right: Form might load data from LocalStorage
+
+  |Admin User|
+  :Fill in Movie Details (Name, Slug, Year, etc.);
+  :Select Categories, Actors, Directors, Countries;
+  :Upload Poster/Thumbnail Image OR Enter URL;
+  note right: Upload calls POST /api/images
+  :Add Server/Episode Information;
+  :Click "Save" Button;
+
+  |Frontend (mnt)|
+  :Trigger Form Submission (via useForm);
+  :Call createMovie Mutation;
+  note right: Sends CreateMovieInput
+
+  |Backend API|
+  :Receive createMovie Mutation;
+  :Call MovieService.createMovie(input);
+  :Validate Input Data (e.g., check unique slug);
+  |Database|
+  :Validate IDs (Categories, Actors, etc.);
+  |Backend API|
+  if (Validation Fails?) then (yes)
+    :Throw Validation Error;
+    :Return Error;
+    |Frontend (mnt)|
+    :Show Error Message;
+    stop
+  else (no)
+    |Database|
+    :Create New Movie Document;
+    :Save to Database;
+    |Backend API|
+    :Revalidate Cache/Frontend (Optional);
+    :Return Created Movie Data;
+    :Return MovieType;
+
+    |Frontend (mnt)|
+    :Receive Success Response;
+    :Clear Form LocalStorage;
+    :Show Success Notification;
+    :Redirect to Movie List/Show Page;
+    stop
+  endif
+}
+
+' --- View Movie Details (UC-9.2 View - Detail) ---
+partition "View Movie Details" {
+  |Admin User|
+  :Click "Show" or "View" Button on a Movie in List;
+
+  |Frontend (mnt)|
+  :Navigate to /movies/show/[id];
+  :Load Movie Show Page;
+  :Call movie Query (via useShow);
+  note right: Uses GET_FULL_MOVIE_DETAIL_QUERY
+
+  |Backend API|
+  :Receive movie Query;
+  :Call MovieService.getMovie(input);
+  |Database|
+  :Find Movie by ID (Populating related fields);
+  :Return Movie Data;
+  |Backend API|
+  :Return MovieType;
+
+  |Frontend (mnt)|
+  :Receive Full Movie Data;
+  :Display Movie Details;
+  stop
+}
+
+' --- Update Movie (UC-9.3) ---
+partition "Update Movie" {
+  |Admin User|
+  :Click "Edit" Button on a Movie in List or Show Page;
+
+  |Frontend (mnt)|
+  :Navigate to /movies/edit/[id];
+  :Load Movie Edit Page (`MovieEditPage`);
+  :Call movie Query to fetch current data;
+  :Display Movie Form Component (`MovieForm`) pre-filled with data;
+
+  |Admin User|
+  :Modify Movie Details;
+  :Click "Save" Button;
+
+  |Frontend (mnt)|
+  :Trigger Form Submission (via useForm);
+  :Call updateMovie Mutation;
+  note right: Sends UpdateMovieInput
+
+  |Backend API|
+  :Receive updateMovie Mutation;
+  :Call MovieService.updateMovie(input);
+  |Database|
+  :Find Movie by ID;
+  |Backend API|
+  :Validate Input Data;
+  if (Validation Fails?) then (yes)
+    :Throw Validation Error;
+    :Return Error;
+    |Frontend (mnt)|
+    :Show Error Message;
+    stop
+  else (no)
+    |Database|
+    :Update Movie Document Fields;
+    :Save to Database;
+    |Backend API|
+    :Revalidate Cache/Frontend (Optional);
+    :Return Updated Movie Data;
+    :Return MovieType;
+
+    |Frontend (mnt)|
+    :Receive Success Response;
+    :Show Success Notification;
+    :Redirect to Movie List/Show Page;
+    stop
+  endif
+}
+
+' --- Delete Movie (UC-9.4) ---
+partition "Delete Movie" {
+  |Admin User|
+  :Click "Delete" Button on a Movie in List or Edit Page;
+
+  |Frontend (mnt)|
+  :Show Confirmation Dialog;
+
+  |Admin User|
+  :Confirm Deletion;
+
+  |Frontend (mnt)|
+  :Call mutateHardDeleteMovie Mutation;
+  note right: Input contains movie ID
+
+  |Backend API|
+  :Receive mutateHardDeleteMovie Mutation;
+  :Call MovieService.hardDeleteMovie(input);
+  |Database|
+  :Find Movie by ID;
+  :Permanently Delete Movie from Database;
+  |Backend API|
+  :Return Deletion Status (e.g., number deleted);
+  :Return Int (Deletion Count);
+
+  |Frontend (mnt)|
+  :Receive Success Response;
+  :Show Success Notification;
+  :Refetch Movie List / Redirect;
+  stop
+}
+
+stop
+
+@enduml

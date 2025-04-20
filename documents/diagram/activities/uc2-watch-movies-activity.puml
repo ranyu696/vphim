@@ -1,0 +1,111 @@
+@startuml UC-2 Watch Movies Activity Diagram
+!theme plain
+skinparam ConditionStyle diamond
+
+title Watch Movies Activity (UC-2)
+caption User selects and watches a movie, progress is saved
+
+|User|
+start
+:Select Movie/Episode to Watch;
+note right: Assumes movie details are already loaded (UC-1)
+:Click Play Button;
+
+|Frontend (fe)|
+:Load Video Player UI;
+:Fetch Movie Streaming Info;
+
+partition "Async Activities During Playback" {
+  |Frontend (fe)|
+  :Start Movie Playback;
+
+  fork
+    |Frontend (fe)|
+    :Periodically Send Progress Update;
+    note left: e.g., every 30 seconds or on pause
+    :Call saveWatchHistory Mutation;
+
+    |Backend API|
+    :Receive saveWatchHistory Mutation;
+    note right: Requires Authentication
+    :Call WatchHistoryService.saveWatchHistory(input);
+    |Database|
+    :Verify User Exists;
+    :Verify Movie Exists;
+    :Check for Existing Watch Record (User, Movie, Episode, Server);
+    if (Record Exists?) then (yes)
+      :Update Existing Record (Progress, LastWatched);
+    else (no)
+      :Create New Watch Record;
+    endif
+    :Return Saved Watch History Record;
+    |Backend API|
+    :Return WatchHistoryType;
+
+    |Frontend (fe)|
+    :Receive Confirmation (Optional);
+
+  fork again
+    |Frontend (fe)|
+    :After a short delay (e.g., 5s);
+    :Send Update View Request;
+    note left: Likely debounced/throttled
+
+    |Backend API|
+    :Receive POST /movies/update-view/:slug;
+    :Call MovieService.updateView(slug);
+    |Database|
+    :Increment Movie View Count;
+    |Backend API|
+    :Return Success/Failure;
+
+    |Frontend (fe)|
+    :Receive Confirmation (Optional);
+  end fork
+
+  |User|
+  :Watch Movie;
+  :Use Playback Controls (Pause, Seek, etc.);
+  :Stop Watching (Pause/Close Player);
+
+}
+
+|User|
+:Return to Movie Later;
+:Select Same Movie/Episode;
+
+|Frontend (fe)|
+:Load Video Player UI;
+:Fetch Movie Streaming Info;
+:Call getMovieWatchHistory Query;
+
+|Backend API|
+:Receive getMovieWatchHistory Query;
+:Call WatchHistoryService.getMovieWatchHistory(input);
+|Database|
+:Verify User Exists;
+:Find Watch Records for User & Movie;
+:Return Watch History List;
+|Backend API|
+:Return WatchHistoryType List;
+
+|Frontend (fe)|
+:Receive Watch History;
+if (Progress Found for Episode/Server?) then (yes)
+  :Prompt User: "Resume from HH:MM:SS?";
+  |User|
+  :Choose Resume or Start Over;
+  if (Choose Resume?) then (yes)
+    |Frontend (fe)|
+    :Seek Player to Saved Timestamp;
+  else (no)
+    :Start Playback from Beginning;
+  endif
+else (no)
+  :Start Playback from Beginning;
+endif
+:Start Movie Playback;
+
+stop
+
+@enduml

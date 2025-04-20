@@ -1,0 +1,118 @@
+@startuml UC-1 Search and Browse Movies Activity Diagram
+
+!theme plain
+skinparam ConditionStyle diamond
+
+title Search and Browse Movies Activity (UC-1)
+caption User searches for movies using filters, keywords, or AI-powered queries
+
+|User|
+start
+:Navigate to Movie Search/Browse Page;
+:Enter Search Criteria / Apply Filters;
+note right
+  Criteria can include:
+  - Keywords
+  - Categories
+  - Countries
+  - Years
+  - Type, Status, Quality, etc.
+  - AI Search Toggle (requires login)
+  - Sorting options
+end note
+
+|Frontend (fe)|
+:Submit Search Request;
+note right: Sends DTO (GetMoviesInput)
+
+|Backend API|
+:Receive Request (GET /movies or movies query);
+:Call MovieService.getMoviesEs(dto);
+
+|Backend API|
+:Generate Cache Keys (Main & AI Filter);
+if (Reset Cache Requested?) then (yes)
+  |Redis Cache|
+  :Delete Main Cache Entry;
+  :Delete AI Filter Cache Entry;
+endif
+if (Bypass Cache Requested?) then (no)
+  |Redis Cache|
+  :Check Main Cache;
+  if (Cache Hit?) then (yes)
+    :Return Cached Results;
+    |Backend API|
+    :Return Results to Client;
+    |Frontend (fe)|
+    :Display Movie Results;
+    stop
+  else (no)
+  -> Cache Miss;
+  endif
+else (yes)
+-> Cache Miss;
+endif
+
+#palegoldenrod:Cache Miss;
+|Backend API|
+if (AI Search Requested (useAI=true) AND Keywords Exist AND AI Enabled?) then (yes)
+  |Redis Cache|
+  :Check AI Filter Cache;
+  if (AI Filter Cache Hit?) then (yes)
+    :Use Cached AI Filter;
+    |Backend API|
+    -> Build Query;
+  else (no)
+    |Backend API|
+    :Log AI Analysis Start;
+    :Call analyzeSearchQuery(keywords, filters);
+    note right: Attempts analysis with multiple Gemini models
+    if (AI Analysis Successful?) then (yes)
+      :Call getAIFilter(aiAnalysis, userFilters);
+      |Redis Cache|
+      :Store AI Filter in Cache (30 min TTL);
+      |Backend API|
+      -> Build Query;
+    else (no)
+      :Log AI Failure;
+      :Set AI Filter to null;
+      -> Build Query;
+    endif
+  endif
+else (no)
+  :Set AI Filter to null;
+  -> Build Query;
+endif
+
+#lightblue:Build Query;
+|Backend API|
+if (AI Filter exists?) then (yes)
+  :Call combineAIWithUserFilters();
+  note right: Merges AI suggestions with user's explicit filters
+  :Log AI-Enhanced Search;
+else (no)
+  :Call buildTraditionalQuery();
+  note right: Builds Elasticsearch query based on DTO filters
+  :Log Traditional Search;
+endif
+:Call executeSearch(query, dto);
+
+|Elasticsearch|
+:Execute Search Query;
+:Return Search Results & Total Count;
+
+|Backend API|
+:Map Results to MovieType;
+|Redis Cache|
+:Store Results in Main Cache (30 sec TTL);
+
+|Backend API|
+:Return Formatted Results (GetMoviesOutput);
+
+|Frontend (fe)|
+:Receive Movie Results;
+:Display Movie Results;
+
+stop
+
+@enduml

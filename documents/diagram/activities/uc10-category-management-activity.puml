@@ -1,0 +1,191 @@
+@startuml UC-10 Category Management Activity Diagram
+
+!theme plain
+skinparam ConditionStyle diamond
+
+title Category Management Activity (Admin - UC-10)
+caption Admin manages categories via the Management (`mnt`) frontend
+
+|Admin User|
+start
+:Navigate to Category Management Section;
+
+' --- List Categories (UC-10.2 View) ---
+partition "List Categories" {
+  |Frontend (mnt)|
+  :Load Simple Resource List Component (`SimpleResourceList`);
+  :Call categories Query (via useTable in `BaseResourceList`);
+  note right: Sends pagination, sorting, filters
+
+  |Backend API|
+  :Receive categories Query;
+  :Call CategoryService.getCategories(input);
+  |Redis Cache|
+  :Check Cache;
+  if (Cache Miss) then (yes)
+    |Backend API|
+    :Build Filter Query (keywords, ids, slugs);
+    |Database|
+    :Fetch Categories from DB;
+    :Fetch Total Count;
+    |Backend API|
+    :Store Results in Cache;
+    :Return Paginated Results (GetCategoriesOutput);
+  else (Cache Hit)
+    |Redis Cache|
+    :Return Cached Results;
+    |Backend API|
+    :Return Paginated Results (GetCategoriesOutput);
+  endif
+
+  |Frontend (mnt)|
+  :Receive Category List Data;
+  :Display Category Table with Actions (Edit, Delete);
+  :Display Search Input;
+}
+
+' --- Search Categories ---
+partition "Search Categories" {
+  |Admin User|
+  :Enter Keywords in Search Box;
+  :Submit Search;
+
+  |Frontend (mnt)|
+  :Update Table Filters (via setFilters);
+  :Trigger Refetch of categories Query;
+  -> List Categories;
+}
+
+' --- Create Category (UC-10.1) ---
+partition "Create Category" {
+  |Admin User|
+  :Click "Create Category" Button;
+
+  |Frontend (mnt)|
+  :Navigate to /categories/create;
+  :Load Create Category Page (`CreateCategory`);
+  :Display Base Resource Form (`BaseResourceForm`);
+  note right: Form might load data from LocalStorage
+
+  |Admin User|
+  :Enter Category Name;
+  :Optionally Enter Slug (or let it auto-generate);
+  :Click "Save" Button;
+
+  |Frontend (mnt)|
+  :Trigger Form Submission (via useForm);
+  :Call createCategory Mutation;
+  note right: Sends { name, slug } input
+
+  |Backend API|
+  :Receive createCategory Mutation;
+  :Call CategoryService.createCategory(input);
+  |Database|
+  :Check if Slug Already Exists;
+  if (Slug Exists?) then (yes)
+    |Backend API|
+    :Throw UnprocessableEntityException (alreadyExists);
+    :Return Error;
+    |Frontend (mnt)|
+    :Show Error Message (Slug already exists);
+    stop
+  else (no)
+    |Database|
+    :Create New Category Document;
+    :Save to Database;
+    :Return Created Category Data;
+    |Backend API|
+    :Return CategoryType;
+
+    |Frontend (mnt)|
+    :Receive Success Response;
+    :Clear Form LocalStorage;
+    :Show Success Notification;
+    :Redirect to Category List/Show Page;
+    stop
+  endif
+}
+
+' --- Update Category (UC-10.3) ---
+partition "Update Category" {
+  |Admin User|
+  :Click "Edit" Button on a Category in List;
+
+  |Frontend (mnt)|
+  :Navigate to /categories/edit/[id];
+  :Load Edit Category Page (`EditCategory`);
+  :Call category Query to fetch current data;
+  :Display Base Resource Form (`BaseResourceForm`) pre-filled;
+  note right: Slug field is disabled for editing
+
+  |Admin User|
+  :Modify Category Name;
+  :Click "Save" Button;
+
+  |Frontend (mnt)|
+  :Trigger Form Submission (via useForm);
+  :Call updateCategory Mutation;
+  note right: Sends { _id, name } input
+
+  |Backend API|
+  :Receive updateCategory Mutation;
+  :Call CategoryService.updateCategory(input);
+  |Database|
+  :Find Category by ID;
+  if (Category Not Found?) then (yes)
+    |Backend API|
+    :Throw NotFoundException;
+    :Return Error;
+    |Frontend (mnt)|
+    :Show Error Message;
+    stop
+  else (no)
+    |Database|
+    :Update Category Name Field;
+    :Save to Database;
+    :Return Updated Category Data;
+    |Backend API|
+    :Return CategoryType;
+
+    |Frontend (mnt)|
+    :Receive Success Response;
+    :Show Success Notification;
+    :Redirect to Category List/Show Page;
+    stop
+  endif
+}
+
+' --- Delete Category (UC-10.4) ---
+partition "Delete Category" {
+  |Admin User|
+  :Click "Delete" Button on a Category in List;
+
+  |Frontend (mnt)|
+  :Show Confirmation Dialog;
+
+  |Admin User|
+  :Confirm Deletion;
+
+  |Frontend (mnt)|
+  :Call deleteCategory Mutation (via DeleteButton);
+  note right: Input contains { _id }
+
+  |Backend API|
+  :Receive deleteCategory Mutation;
+  :Call CategoryService.deleteCategory(input);
+  |Database|
+  :Delete Category from Database by ID;
+  |Backend API|
+  :Return Deletion Count (1);
+  :Return Int (1);
+
+  |Frontend (mnt)|
+  :Receive Success Response;
+  :Show Success Notification (Undoable);
+  :Refetch Category List;
+  stop
+}
+
+stop
+
+@enduml

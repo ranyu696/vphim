@@ -1,0 +1,218 @@
+@startuml UC-8 Comments Management Activity Diagram
+
+!theme plain
+skinparam ConditionStyle diamond
+
+title Comments Management Activity (UC-8)
+caption User views, adds, edits, and deletes comments on a movie page
+
+|User|
+start
+:Navigate to Movie Details Page;
+:Scroll to Comments Section;
+
+|Frontend (fe)|
+:Load Comments Component;
+:Call movieComments Query;
+note right: Sends { movieId, page, limit }
+
+|Backend API|
+:Receive movieComments Query;
+:Call CommentService.getTopLevelComments(input);
+|Database|
+:Find Top-Level Comments for Movie (Paginated);
+:Populate User Data (Avatar, Name);
+:Calculate Total Count;
+:Return Paginated Results (GetCommentsOutput);
+|Backend API|
+:Return GetCommentsOutput;
+
+|Frontend (fe)|
+:Receive Paginated Comments;
+:Display Comments;
+:Display "Load More" Button if hasMore;
+
+' --- Add Comment Flow ---
+partition "Add Comment" {
+  |User|
+  :Enter Comment Text in Input Box;
+  :Click "Post" Button;
+
+  |Frontend (fe)|
+  if (User Not Logged In?) then (yes)
+    :Show Login Required Notification;
+    stop
+  else (no)
+    if (Comment Text Empty?) then (yes)
+      :Do Nothing;
+      stop
+    else (no)
+      :Call createComment Mutation;
+      note right: Sends { movieId, content }
+
+      |Backend API|
+      :Receive createComment Mutation;
+      note right: Requires Authentication
+      :Call CommentService.createComment(actor, input);
+      |Database|
+      :Verify User Exists;
+      :Verify Movie Exists;
+      |Backend API|
+      :Strip HTML from Content;
+      |Database|
+      :Create New Comment Document;
+      :Populate User Data for New Comment;
+      :Return New Comment Data;
+      |Backend API|
+      :Return CommentType;
+
+      |Frontend (fe)|
+      :Receive New Comment Data;
+      :Show Success Notification;
+      :Optimistically Add Comment to List / Refetch List;
+      :Clear Input Box;
+    endif
+  endif
+}
+
+' --- Reply to Comment Flow ---
+partition "Reply to Comment" {
+  |User|
+  :Click "Reply" on an Existing Comment;
+
+  |Frontend (fe)|
+  :Show Reply Input Box below Parent Comment;
+
+  |User|
+  :Enter Reply Text;
+  :Click "Post Reply" Button;
+
+  |Frontend (fe)|
+  if (User Not Logged In?) then (yes)
+    :Show Login Required Notification;
+    stop
+  else (no)
+    if (Reply Text Empty?) then (yes)
+      :Do Nothing;
+      stop
+    else (no)
+      :Call createComment Mutation;
+      note right: Sends { movieId, content, parentCommentId }
+
+      |Backend API|
+      :Receive createComment Mutation;
+      :Call CommentService.createComment(actor, input);
+      |Database|
+      :Verify User, Movie, Parent Comment;
+      |Backend API|
+      :Calculate Nesting Level (Max 5);
+      :Determine Root Parent Comment;
+      :Strip HTML from Content;
+      |Database|
+      :Create New Comment Document (with parentId, rootId, level);
+      :Increment Reply Count on Parent (and Root Parent if different);
+      :Populate User Data for New Comment;
+      :Return New Comment Data;
+      |Backend API|
+      :Return CommentType;
+
+      |Frontend (fe)|
+      :Receive New Comment Data;
+      :Show Success Notification;
+      :Optimistically Add Reply / Refetch Replies;
+      :Hide Reply Input Box;
+    endif
+  endif
+}
+
+' --- Edit Own Comment Flow ---
+partition "Edit Comment" {
+  |User|
+  :Click "Edit" on Own Comment;
+
+  |Frontend (fe)|
+  :Show Edit Input Box with Current Content;
+
+  |User|
+  :Modify Comment Text;
+  :Click "Save" Button;
+
+  |Frontend (fe)|
+  :Call updateComment Mutation;
+  note right: Sends { _id: commentId, content }
+
+  |Backend API|
+  :Receive updateComment Mutation;
+  note right: Requires Authentication
+  :Call CommentService.updateComment(input, actor);
+  |Database|
+  :Find Comment by ID and User ID;
+  if (Comment Not Found or Not Owner?) then (yes)
+    |Backend API|
+    :Throw Not Found / Unauthorized Error;
+    :Return Error;
+    |Frontend (fe)|
+    :Show Error Notification;
+  else (no)
+    |Backend API|
+    :Strip HTML from New Content;
+    |Database|
+    :Update Comment Content and editedAt Timestamp;
+    :Return Updated Comment Data;
+    |Backend API|
+    :Return CommentType;
+
+    |Frontend (fe)|
+    :Receive Updated Comment Data;
+    :Show Success Notification;
+    :Update Comment Display;
+    :Hide Edit Input Box;
+  endif
+}
+
+' --- Delete Own Comment Flow ---
+partition "Delete Comment" {
+  |User|
+  :Click "Delete" on Own Comment;
+
+  |Frontend (fe)|
+  :Show Confirmation Dialog;
+
+  |User|
+  :Confirm Deletion;
+
+  |Frontend (fe)|
+  :Call deleteComment Mutation;
+  note right: Sends { _id: commentId }
+
+  |Backend API|
+  :Receive deleteComment Mutation;
+  note right: Requires Authentication
+  :Call CommentService.deleteComment(commentId, actor);
+  |Database|
+  :Find Comment by ID and User ID;
+  if (Comment Not Found or Not Owner?) then (yes)
+    |Backend API|
+    :Throw Not Found / Unauthorized Error;
+    :Return Error;
+    |Frontend (fe)|
+    :Show Error Notification;
+  else (no)
+    |Database|
+    :Count All Nested Replies;
+    :Delete Comment and All Nested Replies;
+    :Decrement Reply Counts on Parent/Root (if applicable);
+    |Backend API|
+    :Return true (Success);
+    :Return Boolean (true);
+
+    |Frontend (fe)|
+    :Receive Success Response;
+    :Show Success Notification;
+    :Optimistically Remove Comment / Refetch List;
+  endif
+}
+
+stop
+
+@enduml

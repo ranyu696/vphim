@@ -1,0 +1,95 @@
+@startuml UC-7 Account Management Activity Diagram
+
+!theme plain
+skinparam ConditionStyle diamond
+
+title Account Management Activity (UC-7)
+caption User views and updates their profile information
+
+|User|
+start
+:Navigate to Profile/Settings Page;
+
+|Frontend (fe)|
+:Load Profile Component;
+:Call getMe Query;
+
+|Backend API|
+:Receive getMe Query;
+:Call UsersService.findByIdOrThrow(userId);
+|Database|
+:Find User by ID;
+:Populate followMovies (if needed);
+:Return User Data;
+|Backend API|
+:Return UserType;
+
+|Frontend (fe)|
+:Receive User Data;
+:Display User Information (Name, Email, Avatar, etc.);
+
+|User|
+:Decide to Update Information;
+:Click "Edit Profile" Button;
+
+|Frontend (fe)|
+:Load UserUpdateComponent;
+:Pre-fill Form with Current User Data;
+:Display Form (Name Input, Avatar Upload);
+
+|User|
+:Modify Full Name;
+:Click "Choose Image" for Avatar;
+:Select New Avatar Image File;
+
+|Frontend (fe)|
+:Validate File Type & Size (beforeUpload);
+if (Validation Fails?) then (yes)
+  :Show Error Message (Invalid Format/Too Large);
+else (no)
+  :Show Avatar Loading Skeleton;
+  :Initiate Custom Upload (customRequest);
+  :POST /api/images (multipart/form-data);
+
+  |Backend API (Image Service)|
+  :Receive Image Upload;
+  :Process and Store Image (e.g., Cloudinary);
+  :Return New Image URL(s);
+
+  |Frontend (fe)|
+  if (Upload Success?) then (yes)
+    :Update Form Value (avatar.url);
+    :Display New Avatar Preview;
+  else (no)
+    :Show Upload Failed Message;
+  endif
+  :Hide Avatar Loading Skeleton;
+endif
+
+|User|
+:Click "Save Changes" Button;
+
+|Frontend (fe)|
+:Trigger Form Submission (handleSubmit);
+:Call mutationMe Mutation;
+note right: Sends { input: { fullName, avatar: { url } } }
+
+|Backend API|
+:Receive mutationMe Mutation;
+:Call UsersService.update(userId, { fullName, avatar });
+|Database|
+:Find User by ID;
+:Update User Fields (fullName, avatar.url);
+:Save Updated User Document;
+:Return Updated User Data;
+|Backend API|
+:Return UserType;
+
+|Frontend (fe)|
+:Receive Success Response;
+:Invalidate User Identity Cache (React Query);
+:Show Success Notification;
+:Navigate Back or Update Profile Display;
+stop
+
+@enduml

@@ -1,0 +1,150 @@
+@startuml UC-12 Actor Management Activity Diagram
+!theme plain
+skinparam ConditionStyle diamond
+
+title Actor Management Activity (Admin - UC-12)
+caption Admin manages actors via the Management (`mnt`) frontend
+
+|Admin User|
+start
+:Navigate to Actor Management Section;
+note right: Likely path: /actors
+
+|Frontend (mnt)|
+:Load Actor List Component;
+:Call actors Query;
+note right: Sends pagination, sorting, filters
+
+|Backend API|
+:Receive actors Query;
+:Call ActorsService.getActors(input);
+|Redis Cache|
+:Check Cache (Potentially);
+if (Cache Miss) then (yes)
+  |Backend API|
+  :Build Filter Query;
+  |Database|
+  :Fetch Actors from DB;
+  :Fetch Total Count;
+  |Backend API|
+  :Store Results in Cache (Potentially);
+  :Return Paginated Results;
+else (Cache Hit)
+  |Redis Cache|
+  :Return Cached Results;
+  |Backend API|
+  :Return Paginated Results;
+endif
+
+|Frontend (mnt)|
+:Receive Actor List Data;
+:Display Actor Table with Actions (Edit, Delete);
+:Display Search Input;
+
+fork
+  |Admin User|
+  :Enter Keywords in Search Box & Submit;
+  |Frontend (mnt)|
+  :Update Table Filters;
+  :Trigger Refetch of actors Query;
+  -> actors Query Request;
+fork again
+  |Admin User|
+  :Click "Create Actor" Button;
+  |Frontend (mnt)|
+  :Navigate to /actors/create;
+  :Display Resource Form;
+  |Admin User|
+  :Enter Actor Name (+ Optional Slug);
+  :Click "Save" Button;
+  |Frontend (mnt)|
+  :Trigger Form Submission;
+  :Call createActor Mutation;
+  |Backend API|
+  :Receive createActor Mutation;
+  :Check Admin Role;
+  :Call ActorsService.createActor(input);
+  |Database|
+  :Check if Slug Already Exists;
+  if (Slug Exists?) then (yes)
+    |Backend API|
+    :Throw BadRequestException;
+    :Return Error;
+    |Frontend (mnt)|
+    :Show Error Message;
+  else (no)
+    |Database|
+    :Create New Actor Document;
+    :Save to Database;
+    :Return Created Actor Data;
+    |Backend API|
+    :Return ActorType;
+    |Frontend (mnt)|
+    :Receive Success Response;
+    :Show Success Notification;
+    :Redirect to List/Show Page;
+  endif
+fork again
+  |Admin User|
+  :Click "Edit" Button on an Actor;
+  |Frontend (mnt)|
+  :Navigate to /actors/edit/[id];
+  :Call actor Query to fetch data;
+  :Display Resource Form pre-filled;
+  |Admin User|
+  :Modify Actor Name;
+  :Click "Save" Button;
+  |Frontend (mnt)|
+  :Trigger Form Submission;
+  :Call updateActor Mutation;
+  |Backend API|
+  :Receive updateActor Mutation;
+  :Check Admin Role;
+  :Call ActorsService.updateActor(input);
+  |Database|
+  :Find Actor by ID;
+  if (Actor Not Found?) then (yes)
+    |Backend API|
+    :Throw NotFoundException;
+    :Return Error;
+    |Frontend (mnt)|
+    :Show Error Message;
+  else (no)
+    |Database|
+    :Update Actor Name Field;
+    :Save to Database;
+    :Return Updated Actor Data;
+    |Backend API|
+    :Return ActorType;
+    |Frontend (mnt)|
+    :Receive Success Response;
+    :Show Success Notification;
+    :Redirect to List/Show Page;
+  endif
+fork again
+  |Admin User|
+  :Click "Delete" Button on an Actor;
+  |Frontend (mnt)|
+  :Show Confirmation Dialog;
+  |Admin User|
+  :Confirm Deletion;
+  |Frontend (mnt)|
+  :Call deleteActor Mutation;
+  |Backend API|
+  :Receive deleteActor Mutation;
+  :Check Admin Role;
+  :Call ActorsService.deleteActor(input);
+  |Database|
+  :Delete Actor from Database by ID;
+  |Backend API|
+  :Return Deletion Result;
+  |Frontend (mnt)|
+  :Receive Success Response;
+  :Show Success Notification (Undoable);
+  :Refetch Actor List;
+end fork
+
+:Admin interaction ends;
+stop
+
+@enduml

@@ -1,0 +1,56 @@
+@startuml UC-5 Premium Watch Activity Diagram
+!theme plain
+skinparam ConditionStyle diamond
+
+title Premium Watch Access Check (UC-5)
+caption System checks user status for premium features (High Quality / Ads-Free)
+
+|User|
+start
+:Select Movie/Episode to Watch;
+
+|Frontend (fe)|
+:Initiate Playback Request;
+:Call API to get Streaming Info;
+note right: Specific API endpoint may vary \n(e.g., part of movie detail or separate endpoint)
+
+|Backend API|
+:Receive Streaming Info Request;
+:Identify User (via Auth Token);
+:Identify Requested Movie/Episode;
+|Database|
+:Fetch User Data (incl. premium status/role);
+:Fetch Movie Streaming Sources;
+|Backend API|
+if (User Has Premium Access?) then (yes)
+  :Select High-Quality Stream Sources;
+  :Prepare Response (Manifest URL, Ads: false);
+  note right: Indicates no ads should be shown
+else (no)
+  if (Content Requires Premium?) then (yes)
+      :Throw ForbiddenException or similar;
+      :Return Error (e.g., 403 Forbidden);
+      |Frontend (fe)|
+      :Receive Error;
+      :Display Upgrade/Premium Required Message;
+      stop
+  else (no - Standard Content)
+      :Select Standard-Quality Stream Sources;
+      :Prepare Response (Manifest URL, Ads: true);
+      note right: Indicates ads may be shown
+  endif
+endif
+
+|Backend API|
+:Return Streaming Info Response;
+
+|Frontend (fe)|
+:Receive Streaming Info;
+if (Response indicates Ads: true?) then (yes)
+  :Configure Player for Ads (VAST/VMAP);
+endif
+:Load Video Player with appropriate Manifest URL;
+:Start Playback (as per UC-2);
+stop
+
+@enduml

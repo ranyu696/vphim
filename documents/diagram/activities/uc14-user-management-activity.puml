@@ -1,0 +1,156 @@
+@startuml uc14-user-management-activity
+!theme plain
+skinparam ConditionStyle diamond
+
+title UC-14: User Management (Admin)
+caption Activity diagram illustrating the process of administrators managing users within the system.
+
+|Admin User|
+start
+:Navigate to User Management section;
+
+|Frontend (mnt)|
+:Load User List Component;
+:Call GET /users API;
+note right: Sends filter/pagination query params
+
+|Backend API (REST)|
+:Receive GET /users Request;
+:Call UsersService.getUsers();
+|Database|
+:Query Users collection based on filter;
+:Return user list and total count;
+|Backend API (REST)|
+:Return GetUsersResponseDto;
+
+|Frontend (mnt)|
+:Display user list in table;
+:Provide filtering/sorting options;
+
+if (Admin performs action?) then (yes)
+    if (View User Details?) then (yes)
+        |Admin User|
+        :Click on a user row/link;
+        |Frontend (mnt)|
+        :Navigate to User Detail Page/Modal;
+        :Extract userId from selection;
+        :Call GET /users/:id API;
+        |Backend API (REST)|
+        :Receive GET /users/:id Request;
+        :Call UsersService.getUserByIdForAdmin();
+        |Database|
+        :Query Users collection for user by ID;
+        note right: Includes followed movies
+        :Return user details;
+        |Backend API (REST)|
+        :Return UserResponseAdminDto;
+        |Frontend (mnt)|
+        :Display user details (incl. role, block status);
+    else if (Block User?) then (yes)
+        |Admin User|
+        :Click 'Block' button for a user;
+        |Frontend (mnt)|
+        :Show confirmation dialog with reason/note input;
+        |Admin User|
+        :Confirm block and provide reason/note;
+        |Frontend (mnt)|
+        :Gather userId, reason, note;
+        :Call PATCH /users/:id/block API;
+        |Backend API (REST)|
+        :Receive PATCH /users/:id/block Request;
+        note right: Requires admin role\nChecks if target is root admin\nChecks if target is self\nChecks if already blocked
+        :Call UsersService.blockUser();
+        |Database|
+        :Find actor and target user by ID;
+        :Validate permissions (is admin, not self, not root admin);
+        if (Validation fails?) then (yes)
+            |Backend API (REST)|
+            :Return error (Unauthorized/Unprocessable Entity);
+            |Frontend (mnt)|
+            :Show error message;
+        else (no)
+            |Database|
+            :Update user's block status and add activity log;
+            :Return updated user;
+            |Backend API (REST)|
+            :Return updated UserDto;
+            |Frontend (mnt)|
+            :Show success message;
+            :Update UI to reflect blocked status;
+        endif
+    else if (Unblock User?) then (yes)
+        |Admin User|
+        :Click 'Unblock' button for a user;
+        |Frontend (mnt)|
+        :Show confirmation dialog;
+        |Admin User|
+        :Confirm unblock;
+        |Frontend (mnt)|
+        :Gather userId;
+        :Call PATCH /users/:id/unblock API;
+        |Backend API (REST)|
+        :Receive PATCH /users/:id/unblock Request;
+        note right: Requires admin role\nChecks if target is self\nChecks if already unblocked
+        :Call UsersService.unblockUser();
+        |Database|
+        :Find actor and target user by ID;
+        :Validate permissions (is admin, not self);
+        if (Validation fails?) then (yes)
+            |Backend API (REST)|
+            :Return error (Unauthorized/Unprocessable Entity);
+            |Frontend (mnt)|
+            :Show error message;
+        else (no)
+            |Database|
+            :Update user's block status (isBlocked=false) and add activity log;
+            :Return updated user;
+            |Backend API (REST)|
+            :Return updated UserDto;
+            |Frontend (mnt)|
+            :Show success message;
+            :Update UI to reflect unblocked status;
+        endif
+    else if (Update Role?) then (yes)
+        |Admin User|
+        :Select a user and initiate role update;
+        :Choose new role (Admin/Member);
+        |Frontend (mnt)|
+        :Gather userId and new role;
+        :Call PATCH /users/:id API;
+        |Backend API (REST)|
+        :Receive PATCH /users/:id Request;
+        note right: Role update only\nRequires admin role\nChecks if target is root admin (cannot demote)\nChecks if target is self
+        :Call UsersService.updateUser();
+        |Database|
+        :Find actor and target user by ID;
+        :Validate permissions (is admin, not self, not demoting root admin);
+        if (Validation fails?) then (yes)
+            |Backend API (REST)|
+            :Return error (Unauthorized/Unprocessable Entity);
+            |Frontend (mnt)|
+            :Show error message;
+        else (no)
+            |Database|
+            :Update user's role;
+            :Return updated user;
+            |Backend API (REST)|
+            :Return updated UserDto;
+            |Frontend (mnt)|
+            :Show success message;
+            :Update UI to reflect new role;
+        endif
+    else (Filter/Paginate)
+        |Admin User|
+        :Apply filters or navigate pagination;
+        |Frontend (mnt)|
+        :Trigger Refetch;
+        -> GET /users API Call;
+    endif
+else (no)
+    |Admin User|
+    :End interaction;
+    stop
+endif
+
+stop
+@enduml

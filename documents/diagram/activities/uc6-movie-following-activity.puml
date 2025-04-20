@@ -1,0 +1,59 @@
+@startuml UC-6 Movie Following Activity Diagram
+!theme plain
+skinparam ConditionStyle diamond
+
+title Movie Following Activity (UC-6)
+caption User follows or unfollows a movie
+
+|User|
+start
+:View Movie Details Page;
+:Click Follow/Unfollow Button;
+note right: Button state reflects initial follow status
+
+|Frontend (fe)|
+:Identify Target Movie;
+if (Currently Following?) then (yes)
+  :Send Unfollow Request (GraphQL Mutation);
+else (no)
+  :Send Follow Request (GraphQL Mutation);
+endif
+
+|Backend API|
+:Receive Follow/Unfollow Request;
+:Verify User Authentication;
+:Request User & Movie Data from DB;
+|Database|
+:Find User Record by ID;
+:Find Movie Record by Slug;
+:Return User & Movie Records (or null if not found);
+|Backend API|
+:Receive DB Results;
+if (User or Movie Not Found?) then (yes)
+  :Prepare Not Found Error Response;
+  :Return Error;
+  |Frontend (fe)|
+  :Show Error Message;
+  stop
+else (no)
+  |Backend API|
+  :Process Follow/Unfollow Logic;
+  |Database|
+  :Update User's Followed Movies List (Add/Remove Movie ID);
+  :Save Updated User Document;
+  :Fetch Updated User Data (with populated followedMovies);
+  |Backend API|
+  :Prepare Success Response;
+  :Return Updated User Data;
+
+  |Frontend (fe)|
+  :Receive Updated User Data;
+  :Update Follow Button State;
+  :Show Success Feedback (Optional);
+  -> |User| Interact with updated UI;
+endif
+
+|User|
+:Interact with updated UI;
+stop
+@enduml

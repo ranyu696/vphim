@@ -1,0 +1,56 @@
+@startuml UC-3 Token Refresh Activity Diagram
+!theme plain
+skinparam ConditionStyle diamond
+
+title Token Refresh Activity (UC-3)
+caption Client refreshes authentication tokens using a refresh token
+
+|Client (Frontend/Interceptor)|
+start
+:Detect Need for Token Refresh;
+note right: e.g., API returns 401 Unauthorized \nor access token nearing expiry
+:Retrieve Stored Refresh Token;
+if (No Refresh Token?) then (yes)
+  :Initiate Full Logout/Login Flow;
+  stop
+else (no)
+  :Call POST /auth/refresh API;
+
+  |Backend API (REST)|
+  :Receive POST /auth/refresh;
+  :Extract Refresh Token;
+  :Call AuthService.refresh(token);
+  :Verify Refresh Token (JWT);
+  if (Invalid/Expired Token?) then (yes)
+    :Throw UnauthorizedException;
+    :Return 401 Error;
+    |Client (Frontend/Interceptor)|
+    :Receive 401 Error;
+    :Initiate Full Logout/Login Flow;
+    stop
+  else (no)
+    |Database|
+    :Find User by ID from Token Payload;
+    if (User Not Found or Blocked?) then (yes)
+      |Backend API (REST)|
+      :Throw UnauthorizedException;
+      :Return 401 Error;
+      |Client (Frontend/Interceptor)|
+      :Receive 401 Error;
+      :Initiate Full Logout/Login Flow;
+      stop
+    else (no)
+      |Backend API (REST)|
+      :Generate New Access Token;
+      :Generate New Refresh Token;
+      :Return New Tokens (LoginResponseDto);
+      |Client (Frontend/Interceptor)|
+      :Receive New Tokens;
+      :Store New Tokens (e.g., Cookie, LocalStorage);
+      :Retry Original Failed Request (if applicable);
+      stop
+    endif
+  endif
+endif
+
+@enduml

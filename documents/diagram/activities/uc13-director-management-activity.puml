@@ -1,0 +1,150 @@
+@startuml UC-13 Director Management Activity Diagram
+!theme plain
+skinparam ConditionStyle diamond
+
+title Director Management Activity (Admin - UC-13)
+caption Admin manages directors via the Management (`mnt`) frontend
+
+|Admin User|
+start
+:Navigate to Director Management Section;
+note right: Likely path: /directors
+
+|Frontend (mnt)|
+:Load Director List Component;
+:Call directors Query;
+note right: Sends pagination, sorting, filters
+
+|Backend API|
+:Receive directors Query;
+:Call DirectorsService.getDirectors(input);
+|Redis Cache|
+:Check Cache (Potentially);
+if (Cache Miss) then (yes)
+  |Backend API|
+  :Build Filter Query;
+  |Database|
+  :Fetch Directors from DB;
+  :Fetch Total Count;
+  |Backend API|
+  :Store Results in Cache (Potentially);
+  :Return Paginated Results;
+else (Cache Hit)
+  |Redis Cache|
+  :Return Cached Results;
+  |Backend API|
+  :Return Paginated Results;
+endif
+
+|Frontend (mnt)|
+:Receive Director List Data;
+:Display Director Table with Actions (Edit, Delete);
+:Display Search Input;
+
+fork
+  |Admin User|
+  :Enter Keywords in Search Box & Submit;
+  |Frontend (mnt)|
+  :Update Table Filters;
+  :Trigger Refetch of directors Query;
+  -> directors Query Request;
+fork again
+  |Admin User|
+  :Click "Create Director" Button;
+  |Frontend (mnt)|
+  :Navigate to /directors/create;
+  :Display Resource Form;
+  |Admin User|
+  :Enter Director Name (+ Optional Slug);
+  :Click "Save" Button;
+  |Frontend (mnt)|
+  :Trigger Form Submission;
+  :Call createDirector Mutation;
+  |Backend API|
+  :Receive createDirector Mutation;
+  :Check Admin Role;
+  :Call DirectorsService.createDirector(input);
+  |Database|
+  :Check if Slug Already Exists;
+  if (Slug Exists?) then (yes)
+    |Backend API|
+    :Throw BadRequestException;
+    :Return Error;
+    |Frontend (mnt)|
+    :Show Error Message;
+  else (no)
+    |Database|
+    :Create New Director Document;
+    :Save to Database;
+    :Return Created Director Data;
+    |Backend API|
+    :Return DirectorType;
+    |Frontend (mnt)|
+    :Receive Success Response;
+    :Show Success Notification;
+    :Redirect to List/Show Page;
+  endif
+fork again
+  |Admin User|
+  :Click "Edit" Button on a Director;
+  |Frontend (mnt)|
+  :Navigate to /directors/edit/[id];
+  :Call director Query to fetch data;
+  :Display Resource Form pre-filled;
+  |Admin User|
+  :Modify Director Name;
+  :Click "Save" Button;
+  |Frontend (mnt)|
+  :Trigger Form Submission;
+  :Call updateDirector Mutation;
+  |Backend API|
+  :Receive updateDirector Mutation;
+  :Check Admin Role;
+  :Call DirectorsService.updateDirector(input);
+  |Database|
+  :Find Director by ID;
+  if (Director Not Found?) then (yes)
+    |Backend API|
+    :Throw NotFoundException;
+    :Return Error;
+    |Frontend (mnt)|
+    :Show Error Message;
+  else (no)
+    |Database|
+    :Update Director Name Field;
+    :Save to Database;
+    :Return Updated Director Data;
+    |Backend API|
+    :Return DirectorType;
+    |Frontend (mnt)|
+    :Receive Success Response;
+    :Show Success Notification;
+    :Redirect to List/Show Page;
+  endif
+fork again
+  |Admin User|
+  :Click "Delete" Button on a Director;
+  |Frontend (mnt)|
+  :Show Confirmation Dialog;
+  |Admin User|
+  :Confirm Deletion;
+  |Frontend (mnt)|
+  :Call deleteDirector Mutation;
+  |Backend API|
+  :Receive deleteDirector Mutation;
+  :Check Admin Role;
+  :Call DirectorsService.deleteDirector(input);
+  |Database|
+  :Delete Director from Database by ID;
+  |Backend API|
+  :Return Deletion Result;
+  |Frontend (mnt)|
+  :Receive Success Response;
+  :Show Success Notification (Undoable);
+  :Refetch Director List;
+end fork
+
+:Admin interaction ends;
+stop
+
+@enduml

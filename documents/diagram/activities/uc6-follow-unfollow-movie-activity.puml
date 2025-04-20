@@ -1,0 +1,102 @@
+@startuml UC-6 Follow Unfollow Movie Activity Diagram
+
+!theme plain
+skinparam ConditionStyle diamond
+
+title Follow/Unfollow Movie Activity (UC-6)
+caption User adds or removes a movie from their followed list
+
+|User|
+start
+:View Movie Details Page;
+:Locate Follow/Unfollow Button;
+note right: Button state reflects current follow status
+
+if (User wants to Follow?) then (yes)
+  :Click Follow Button;
+  |Frontend (Movie Page/Button)|
+  :Call followMovie Mutation;
+  note right: Sends { movieSlug } input
+
+  |API (GraphQL UsersResolver)|
+  :Receive followMovie Mutation;
+  note right: Requires Authentication
+  :Call UsersService.followMovie(actor, movieSlug);
+
+  |API (UsersService)|
+  :Find User by Actor ID;
+  :Find Movie by Slug;
+    if (Movie Not Found?) then (yes)
+    :Throw NotFoundException;
+    |API (GraphQL UsersResolver)|
+    :Return Error;
+    |Frontend (Movie Page/Button)|
+    :Show Error Message;
+    stop
+    else (no)
+    |API (UsersService)|
+    :Get User's current followMovies list;
+    :Add Movie ID to list (if not present);
+    :Update User document with new followMovies list;
+
+    |API (UsersRepository)|
+    :Update User in Database;
+
+    |API (UsersService)|
+    :Return Updated User Data (with populated followMovies);
+
+    |API (GraphQL UsersResolver)|
+    :Return UserType;
+
+    |Frontend (Movie Page/Button)|
+    :Receive Updated User Data;
+    :Update Button State (to Unfollow);
+    :Show Success Feedback (Optional);
+    stop
+  endif
+
+else (User wants to Unfollow)
+  :Click Unfollow Button;
+  |Frontend (Movie Page/Button)|
+  :Call unfollowMovie Mutation;
+  note right: Sends { movieSlug } input
+
+  |API (GraphQL UsersResolver)|
+  :Receive unfollowMovie Mutation;
+  note right: Requires Authentication
+  :Call UsersService.unfollowMovie(actor, movieSlug);
+
+  |API (UsersService)|
+  :Find User by Actor ID;
+  :Find Movie by Slug;
+    if (Movie Not Found?) then (yes)
+    :Throw NotFoundException;
+    |API (GraphQL UsersResolver)|
+    :Return Error;
+    |Frontend (Movie Page/Button)|
+    :Show Error Message;
+    stop
+    else (no)
+    |API (UsersService)|
+    :Get User's current followMovies list;
+    :Remove Movie ID from list;
+    :Update User document with new followMovies list;
+
+    |API (UsersRepository)|
+    :Update User in Database;
+
+    |API (UsersService)|
+    :Return Updated User Data (with populated followMovies);
+
+    |API (GraphQL UsersResolver)|
+    :Return UserType;
+
+    |Frontend (Movie Page/Button)|
+    :Receive Updated User Data;
+    :Update Button State (to Follow);
+    :Show Success Feedback (Optional);
+    stop
+    endif
+endif
+
+@enduml

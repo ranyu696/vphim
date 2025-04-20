@@ -1,0 +1,150 @@
+@startuml UC-11 Region Management Activity Diagram
+!theme plain
+skinparam ConditionStyle diamond
+
+title Region Management Activity (Admin - UC-11)
+caption Admin manages regions (countries) via the Management (`mnt`) frontend
+
+|Admin User|
+start
+:Navigate to Region Management Section;
+note right: Likely path: /countries
+
+|Frontend (mnt)|
+:Load Simple Resource List Component;
+:Call regions Query;
+note right: Sends pagination, sorting, filters
+
+|Backend API|
+:Receive regions Query;
+:Call RegionsService.getRegions(input);
+|Redis Cache|
+:Check Cache (Potentially);
+if (Cache Miss) then (yes)
+  |Backend API|
+  :Build Filter Query;
+  |Database|
+  :Fetch Regions from DB;
+  :Fetch Total Count;
+  |Backend API|
+  :Store Results in Cache (Potentially);
+  :Return Paginated Results;
+else (Cache Hit)
+  |Redis Cache|
+  :Return Cached Results;
+  |Backend API|
+  :Return Paginated Results;
+endif
+
+|Frontend (mnt)|
+:Receive Region List Data;
+:Display Region Table with Actions (Edit, Delete);
+:Display Search Input;
+
+fork
+  |Admin User|
+  :Enter Keywords in Search Box & Submit;
+  |Frontend (mnt)|
+  :Update Table Filters;
+  :Trigger Refetch of regions Query;
+  -> regions Query Request;
+fork again
+  |Admin User|
+  :Click "Create Region" Button;
+  |Frontend (mnt)|
+  :Navigate to /countries/create;
+  :Display Resource Form;
+  |Admin User|
+  :Enter Region Name (+ Optional Slug);
+  :Click "Save" Button;
+  |Frontend (mnt)|
+  :Trigger Form Submission;
+  :Call createRegion Mutation;
+  |Backend API|
+  :Receive createRegion Mutation;
+  :Check Admin Role;
+  :Call RegionsService.createRegion(input);
+  |Database|
+  :Check if Slug Already Exists;
+  if (Slug Exists?) then (yes)
+    |Backend API|
+    :Throw BadRequestException;
+    :Return Error;
+    |Frontend (mnt)|
+    :Show Error Message;
+  else (no)
+    |Database|
+    :Create New Region Document;
+    :Save to Database;
+    :Return Created Region Data;
+    |Backend API|
+    :Return RegionType;
+    |Frontend (mnt)|
+    :Receive Success Response;
+    :Show Success Notification;
+    :Redirect to List/Show Page;
+  endif
+fork again
+  |Admin User|
+  :Click "Edit" Button on a Region;
+  |Frontend (mnt)|
+  :Navigate to /countries/edit/[id];
+  :Call region Query to fetch data;
+  :Display Resource Form pre-filled;
+  |Admin User|
+  :Modify Region Name;
+  :Click "Save" Button;
+  |Frontend (mnt)|
+  :Trigger Form Submission;
+  :Call updateRegion Mutation;
+  |Backend API|
+  :Receive updateRegion Mutation;
+  :Check Admin Role;
+  :Call RegionsService.updateRegion(input);
+  |Database|
+  :Find Region by ID;
+  if (Region Not Found?) then (yes)
+    |Backend API|
+    :Throw NotFoundException;
+    :Return Error;
+    |Frontend (mnt)|
+    :Show Error Message;
+  else (no)
+    |Database|
+    :Update Region Name Field;
+    :Save to Database;
+    :Return Updated Region Data;
+    |Backend API|
+    :Return RegionType;
+    |Frontend (mnt)|
+    :Receive Success Response;
+    :Show Success Notification;
+    :Redirect to List/Show Page;
+  endif
+fork again
+  |Admin User|
+  :Click "Delete" Button on a Region;
+  |Frontend (mnt)|
+  :Show Confirmation Dialog;
+  |Admin User|
+  :Confirm Deletion;
+  |Frontend (mnt)|
+  :Call deleteRegion Mutation;
+  |Backend API|
+  :Receive deleteRegion Mutation;
+  :Check Admin Role;
+  :Call RegionsService.deleteRegion(input);
+  |Database|
+  :Delete Region from Database by ID;
+  |Backend API|
+  :Return Deletion Result;
+  |Frontend (mnt)|
+  :Receive Success Response;
+  :Show Success Notification (Undoable);
+  :Refetch Region List;
+end fork
+
+:Admin interaction ends;
+stop
+
+@enduml
