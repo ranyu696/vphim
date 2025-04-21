@@ -1,6 +1,6 @@
 import { Types } from 'mongoose';
 import { IntersectionType, OmitType } from '@nestjs/swagger';
-import { Transform, Type } from 'class-transformer';
+import { Transform, TransformFnParams, Type } from 'class-transformer';
 import {
     IsDate,
     IsEmail,
@@ -44,6 +44,7 @@ export class UserDto
     @IsString()
     password: string;
 
+    @Transform(({ value }: TransformFnParams) => value?.trim())
     @IsNotEmpty()
     @IsString()
     fullName: string;

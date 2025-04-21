@@ -180,3 +180,10 @@ export function extractJSON(text: string): object {
         return {};
     }
 }
+
+export function isOnlySpaces(str?: string): boolean {
+    if (!str) {
+        return true;
+    }
+    return str?.trim()?.length === 0;
+}

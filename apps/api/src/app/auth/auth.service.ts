@@ -15,7 +15,7 @@ import { Octokit } from '@octokit/rest';
 import * as otplib from 'otplib';
 
 import { RedisService } from '../../libs/modules/redis';
-import { convertToObjectId, getGravatarUrl } from '../../libs/utils';
+import { convertToObjectId, getGravatarUrl, isOnlySpaces } from '../../libs/utils';
 import { NullableType } from '../../libs/types';
 import {
     AuthLoginGithubDto,
@@ -407,9 +407,9 @@ export class AuthService implements OnModuleInit {
             idToken: idToken,
             audience: [this.configService.getOrThrow('auth.googleId', { infer: true })],
         });
-        const data = ticket.getPayload();
+        const googleData = ticket.getPayload();
 
-        if (!data) {
+        if (!googleData) {
             throw new UnauthorizedException({
                 errors: {
                     google: 'wrongIdToken',
@@ -418,13 +418,14 @@ export class AuthService implements OnModuleInit {
             });
         }
 
-        let user = await this.usersService.findByEmail(data.email);
+        let user = await this.usersService.findByEmail(googleData.email);
         if (!user) {
+            const fullName = googleData?.email?.split('@')[0] || 'New User'; // Extract full name from email before @
             user = await this.usersService.create({
-                email: data.email,
-                fullName: data.name,
+                email: googleData.email,
+                fullName: isOnlySpaces(googleData?.name) ? fullName : googleData?.name,
                 avatar: {
-                    url: data?.picture,
+                    url: googleData?.picture,
                 },
                 emailVerified: true,
             });
@@ -456,9 +457,10 @@ export class AuthService implements OnModuleInit {
         const { data: usrGithub } = data;
         let user = await this.usersService.findByEmail(usrGithub.email);
         if (!user) {
+            const fullName = usrGithub.email.split('@')[0] || 'User'; // Extract full name from email before @
             user = await this.usersService.create({
                 email: usrGithub.email,
-                fullName: usrGithub.name,
+                fullName: isOnlySpaces(usrGithub.name) ? fullName : usrGithub.name,
                 avatar: {
                     url: usrGithub?.avatar_url,
                 },
