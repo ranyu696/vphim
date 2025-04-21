@@ -216,21 +216,25 @@ export class Movie
     @ApiProperty()
     @Prop({ type: Date, default: null })
     deletedAt?: Date;
+
+    @ApiProperty()
+    @Prop({ type: Date, default: null })
+    lastViewChange?: Date;
 }
 
 export const MovieSchema = SchemaFactory.createForClass(Movie);
 
-MovieSchema.pre('save', function () {
-    this.set({ updatedAt: new Date(), createdAt: new Date() });
-});
+// MovieSchema.pre('save', function () {
+//     this.set({ updatedAt: new Date(), createdAt: new Date() });
+// });
 
-MovieSchema.pre('updateOne', function () {
-    this.set({ updatedAt: new Date() });
-});
+// MovieSchema.pre('updateOne', function () {
+//     this.set({ updatedAt: new Date() });
+// });
 
-MovieSchema.pre('findOneAndUpdate', function () {
-    this.set({ updatedAt: new Date() });
-});
+// MovieSchema.pre('findOneAndUpdate', function () {
+//     this.set({ updatedAt: new Date() });
+// });
 
 MovieSchema.post('save', async function (doc) {
     const searchService = global.searchService as SearchService;

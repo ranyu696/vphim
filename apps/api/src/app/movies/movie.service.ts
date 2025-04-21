@@ -701,7 +701,7 @@ export class MovieService {
         const movie = await this.movieRepo.findOneOrThrow({ filterQuery: { slug } });
         const movieUpdated = await this.movieRepo.findOneAndUpdateOrThrow({
             filterQuery: { slug },
-            updateQuery: { view: (movie?.view || 0) + 1 },
+            updateQuery: { view: (movie?.view || 0) + 1, lastViewChange: new Date() },
         });
         return {
             status: 'success',
@@ -749,7 +749,7 @@ export class MovieService {
 
         const updatedMovie = await this.movieRepo.findOneAndUpdateOrThrow({
             filterQuery: { _id: convertToObjectId(_id) },
-            updateQuery: { $set: movieToUpdate },
+            updateQuery: { $set: { ...movieToUpdate, updatedAt: new Date() } },
             queryOptions: {
                 new: true,
                 populate: [
@@ -814,7 +814,7 @@ export class MovieService {
                     },
                 });
 
-                let content = `Query: "${keywords?.trim()}".`;
+                let content = `User's query: "${keywords?.trim()}".`;
                 if (categories) {
                     content += ` Categories: "${categories?.trim()}".`;
                 }
@@ -996,10 +996,10 @@ export class MovieService {
         // and view count to determine trending movies
         const movies = await this.movieRepo.find({
             filterQuery: {
-                updatedAt: { $gte: startDate },
+                lastViewChange: { $gte: startDate },
             },
             queryOptions: {
-                sort: { view: -1, updatedAt: -1 },
+                sort: { view: -1, lastViewChange: -1 },
                 limit,
             },
         });
