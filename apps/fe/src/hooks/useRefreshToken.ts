@@ -16,6 +16,11 @@ export function useRefreshToken() {
             return;
         }
 
+        if (!isRefreshing && (!session?.user.accessToken || !session?.user.refreshToken)) {
+            await signOut();
+            return;
+        }
+
         setIsRefreshing(true);
 
         try {

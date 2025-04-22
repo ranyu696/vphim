@@ -53,7 +53,7 @@ export function useAxiosAuth(payload?: UseAxiosAuthPayload) {
                     const unauthorizedError = response.data.errors.find(
                         // eslint-disable-next-line @typescript-eslint/no-explicit-any
                         (error: any) =>
-                            error?.message?.toLowerCase() === 'unauthorized' ||
+                            error?.message?.toLowerCase()?.includes('unauthorized') ||
                             error?.extensions?.code === 'UNAUTHENTICATED',
                     );
                     if (unauthorizedError) {
