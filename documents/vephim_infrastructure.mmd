@@ -1,0 +1,123 @@
+---
+title: VePhim Infrastructure Diagram
+---
+flowchart TD
+    %% External Actors
+    subgraph Actors
+        dev([Developer])
+        user([User])
+        admin([Admin])
+    end
+
+    %% CI/CD Pipeline
+    subgraph gha["GitHub Actions"]
+        api_img["API Docker Image Artifact"]
+        mobile_apk["Mobile APK Artifact"]
+    end
+
+    %% DNS/CDN Layer
+    cloudflare["Cloudflare
+                DNS, CDN & Security"]
+
+    %% Cloud Services
+    subgraph cloud_group["Cloud Services"]
+        subgraph vercel["Vercel Cloud"]
+            fe_vercel["Next.js (fe)"]
+            mnt_vercel["Next.js (mnt)"]
+        end
+
+        subgraph expo_cloud["Expo Cloud"]
+            expo_build["Expo Build Artifact"]
+        end
+    end
+
+    %% Mobile Group
+    subgraph mobile_group["Mobile"]
+        subgraph mobile_device["Mobile Client"]
+            mobile_app["Mobile Application"]
+        end
+    end
+
+    %% Docker Host Group
+    subgraph docker_host["Docker Host"]
+        subgraph api_container["API Service"]
+            api_artifact["API Application"]
+        end
+
+        subgraph db_services["Database Services"]
+            subgraph mongo_container["MongoDB"]
+                mongo_db[(MongoDB)]
+            end
+
+            subgraph redis_container["Redis"]
+                redis_artifact["Redis Service"]
+            end
+
+            subgraph es_container["Elasticsearch"]
+                es_artifact["Elasticsearch Service"]
+            end
+        end
+    end
+
+    %% Main Relationships
+    dev -->|"Push to main branch"| gha
+    user -->|"HTTPS"| cloudflare
+    admin -->|"HTTPS"| cloudflare
+    user -->|"App/Expo"| mobile_device
+
+    gha -->|"Build & Push Docker image"| api_img
+    api_img -->|"Pull & Deploy"| api_container
+    gha -->|"Build APK"| mobile_apk
+    mobile_apk -->|"Upload"| expo_build
+    expo_build -->|"Download/Install"| mobile_device
+
+    cloudflare -->|"API DNS/Proxy"| api_container
+    cloudflare -->|"DNS & CDN"| fe_vercel
+    cloudflare -->|"DNS & CDN"| mnt_vercel
+
+    fe_vercel -->|"GraphQL/REST"| api_container
+    mnt_vercel -->|"GraphQL/REST"| api_container
+    mobile_app -->|"GraphQL/REST"| api_container
+
+    api_container -->|"Data Storage"| mongo_db
+    api_container -->|"Caching"| redis_artifact
+    api_container -->|"Search"| es_artifact
+
+    %% Notes
+    cloudflare_note("\- DNS management for all domains.
+                    \- CDN/Caching for static content and assets.
+                    \- SSL proxy for all public endpoints.
+                    \- Handles HTTPS for API, FE, MNT, and Mobile.
+                    \- Routes API to API container, FE/MNT to Vercel.")
+    cloudflare --- cloudflare_note
+
+    api_note("Handles business logic.
+             Aggregates data from MongoDB, Redis, Elasticsearch.")
+    api_container --- api_note
+
+    fe_note("Main user interface.
+            Communicates with API.")
+    fe_vercel --- fe_note
+
+    mnt_note("Admin dashboard.
+             Communicates with API.")
+    mnt_vercel --- mnt_note
+
+    mobile_note("Native mobile app.
+               Communicates with API.")
+    mobile_device --- mobile_note
+
+    %% Styling
+    classDef actor fill:#FFF,stroke:#607D8B,color:#222
+    classDef node fill:#E3F2FD,stroke:#1976D2,color:#222
+    classDef artifact fill:#FFFDE7,stroke:#FBC02D,color:#222
+    classDef database fill:#E0F2F1,stroke:#009688,color:#222
+    classDef rectangle fill:#F0F4C3,stroke:#689F38,color:#222
+    classDef note fill:#FFFDE7,stroke:#FBC02D,color:#333,text-align:left
+
+    class dev,user,admin actor
+    class cloudflare,gha,vercel,fe_vercel,mnt_vercel,expo_cloud,mobile_device,api_container,mongo_container,redis_container,es_container node
+    class api_img,mobile_apk,expo_build,api_artifact,redis_artifact,es_artifact artifact
+    class mongo_db database
+    class cloud_group,mobile_group,docker_host,db_services rectangle
+    class cloudflare_note,api_note,fe_note,mnt_note,mobile_note note

@@ -57,7 +57,7 @@ node "GitHub Actions" as gha {
 dev -down[#0288D1,dashed]-> gha : Push to main branch
 
 ' DNS/Proxy Layer
-node "Cloudflare (DNS & Proxy)" as cloudflare
+node "Cloudflare (DNS, CDN & Security)" as cloudflare
 
 ' Cloud Services Group
 rectangle "Cloud Services" as cloud_group {
@@ -109,8 +109,8 @@ mobile_apk -down-> expo_build : Upload
 expo_build -right-> mobile_device : Download/Install
 
 cloudflare -down-> api_container : API DNS/Proxy
-cloudflare -left-> fe_vercel : DNS
-cloudflare -right-> mnt_vercel : DNS
+cloudflare -left-> fe_vercel : DNS & CDN
+cloudflare -right-> mnt_vercel : DNS & CDN
 
 fe_vercel -down-> api_container : GraphQL/REST
 mnt_vercel -down-> api_container : GraphQL/REST
@@ -122,7 +122,9 @@ api_container -down-> es_artifact
 
 ' Notes
 note left of cloudflare #FFFDE7
-  DNS and SSL proxy for all public endpoints.
+  DNS management for all domains.
+  CDN/Caching for static content and assets.
+  SSL proxy for all public endpoints.
   Handles HTTPS for API, FE, MNT, and Mobile.
   Routes API to API container, FE/MNT to Vercel.
 end note
