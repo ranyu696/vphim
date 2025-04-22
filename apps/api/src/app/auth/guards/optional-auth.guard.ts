@@ -1,4 +1,4 @@
-import { Injectable, ExecutionContext, CanActivate } from '@nestjs/common';
+import { Injectable, ExecutionContext, CanActivate, UnauthorizedException } from '@nestjs/common';
 import { GqlExecutionContext } from '@nestjs/graphql';
 import { verify } from 'jsonwebtoken';
 import { ConfigService } from '@nestjs/config';
@@ -19,20 +19,20 @@ export class OptionalAuthGuard implements CanActivate {
                 const authHeader = gqlReq?.headers?.authorization?.split(' ')[1];
 
                 if (!authHeader) {
-                    return true; // No token, but that's okay
+                    return true; // No token, allow the request to proceed
                 }
 
                 try {
                     const userDecoded = verify(authHeader, jwtSecret) as UserJwt;
                     if (typeof userDecoded === 'string') {
-                        return true; // Invalid token format, but still proceed
+                        throw new UnauthorizedException('Invalid token format');
                     }
 
                     // Add validated user to request
                     gqlReq.user = userDecoded;
                     return true;
                 } catch (error) {
-                    return true; // Invalid token, but still proceed
+                    throw new UnauthorizedException('Invalid or expired token');
                 }
             }
             default: {
@@ -40,20 +40,20 @@ export class OptionalAuthGuard implements CanActivate {
                 const authHeader = request?.headers?.authorization?.split(' ')[1];
 
                 if (!authHeader) {
-                    return true; // No token, but that's okay
+                    return true; // No token, allow the request to proceed
                 }
 
                 try {
                     const userDecoded = verify(authHeader, jwtSecret) as UserJwt;
                     if (typeof userDecoded === 'string') {
-                        return true; // Invalid token format, but still proceed
+                        throw new UnauthorizedException('Invalid token format');
                     }
 
                     // Add validated user to request
                     request.user = userDecoded;
                     return true;
                 } catch (error) {
-                    return true; // Invalid token, but still proceed
+                    throw new UnauthorizedException('Invalid or expired token');
                 }
             }
         }
