@@ -1,14 +1,31 @@
+'use client';
+
 import { PropsWithChildren } from 'react';
-import { redirect, RedirectType } from 'next/navigation';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '../api/auth/[...nextauth]/options';
+import { useIsAuthenticated } from '@refinedev/core';
+import { useRouter } from 'next/navigation';
+import { Layout } from 'antd';
+import '@/components/layout/layout.css';
 
-export default async function NoAuthLayout({ children }: PropsWithChildren) {
-    const auth = await getServerSession(authOptions);
+const { Content } = Layout;
 
-    if (auth?.user) {
-        return redirect('/', RedirectType.replace);
+export default function NoAuthLayout({ children }: PropsWithChildren) {
+    const router = useRouter();
+    const { data, isLoading } = useIsAuthenticated();
+
+    if (!isLoading && data?.authenticated) {
+        router.replace('/');
+        return <></>;
     }
 
-    return <div className="layout-space-container">{children}</div>;
+    if (isLoading) {
+        return <></>;
+    }
+
+    return (
+        <Layout className="auth-layout">
+            <Content>
+                <div className="layout-space-container">{children}</div>
+            </Content>
+        </Layout>
+    );
 }

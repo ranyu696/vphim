@@ -1,36 +1,24 @@
+'use client';
+
 import { PropsWithChildren } from 'react';
-import { redirect, RedirectType } from 'next/navigation';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '../api/auth/[...nextauth]/options';
+import { useIsAuthenticated } from '@refinedev/core';
+import { useRouter } from 'next/navigation';
+import { signOut } from 'next-auth/react';
+import '@/components/layout/layout.css';
 
-import { LayoutComponent } from '@/components/layout';
-import { getCategories } from '@/services/categories';
-import { getRegions } from '@/services/regions';
+export default function RequiredAuthLayout({ children }: PropsWithChildren) {
+    const router = useRouter();
+    const { data, isLoading } = useIsAuthenticated();
 
-export default async function RequiredAuthLayout({ children }: PropsWithChildren) {
-    const auth = await getServerSession(authOptions);
-    const [categories, regions] = await Promise.all([
-        getCategories({
-            pagination: {
-                current: 1,
-                pageSize: 200,
-            },
-        }),
-        getRegions({
-            pagination: {
-                current: 1,
-                pageSize: 200,
-            },
-        }),
-    ]);
-
-    if (!auth?.user) {
-        return redirect('/', RedirectType.replace);
+    if (!isLoading && !data?.authenticated) {
+        signOut();
+        router.replace('/');
+        return <></>;
     }
 
-    return (
-        <LayoutComponent categories={categories} regions={regions}>
-            {children}
-        </LayoutComponent>
-    );
+    if (isLoading) {
+        return <></>;
+    }
+
+    return <div className="layout-space-container">{children}</div>;
 }
