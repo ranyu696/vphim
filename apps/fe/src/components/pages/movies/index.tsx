@@ -10,15 +10,14 @@ import { motion } from 'framer-motion';
 import { LoadingOutlined } from '@ant-design/icons';
 
 import type { MovieType } from 'apps/api/src/app/movies/movie.type';
+import type { Category } from 'apps/api/src/app/categories/category.schema';
+import type { Region } from 'apps/api/src/app/regions/region.schema';
 
 import { sortedStringify } from '@/libs/utils/common';
 import { MOVIES_LIST_QUERY } from '@/queries/movies';
 import { MovieCard } from '@/components/card/movie-card';
 import { MovieFilters } from './movie-filter';
 import AISearchSteps from './ai-search-steps';
-
-import type { Category } from 'apps/api/src/app/categories/category.schema';
-import type { Region } from 'apps/api/src/app/regions/region.schema';
 
 export type LocalQuery = {
     pagination: {
