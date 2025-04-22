@@ -15,7 +15,7 @@ import { OptimizeImageDTO } from './dtos/optimize-image.dto';
 import { ImageUploadedResponseDTO } from './dtos';
 import { MulterFile } from './multer.type';
 import { CloudinaryService } from '../../libs/modules/cloudinary.com';
-import { isNullOrUndefined } from '../../libs/utils/common';
+import { isNullOrUndefined, isTrue } from '../../libs/utils/common';
 import { MovieService } from '../movies/movie.service';
 import { ActorService } from '../actors/actor.service';
 import { DirectorService } from '../directors/director.service';
@@ -272,6 +272,11 @@ export class ImagesService {
      */
     @Cron('0 7 * * *')
     async removeUnusedImage(next_cursor?: string, maxResults?: number) {
+        if (!isTrue(this.configService.get('IS_REMOVE_UNUSED_UPLOAD_IMAGE'))) {
+            this.logger.log('Remove unused image is disabled by `IS_REMOVE_UNUSED_UPLOAD_IMAGE`');
+            return;
+        }
+
         const RESULT_PER_REQUEST = 100;
 
         this.logger.log('Start remove unused image in cloudinary on 7:00 AM every day');
@@ -280,6 +285,8 @@ export class ImagesService {
             maxResults: maxResults || RESULT_PER_REQUEST,
             next_cursor,
         });
+
+        const arrName = [{ 0: 'movie' }, { 1: 'actor' }, { 2: 'director' }, { 3: 'user' }];
 
         // Remove unused image
         for (const image of images.resources) {
@@ -291,10 +298,14 @@ export class ImagesService {
                 this.userService.isImageInUse(image.secure_url),
             ]);
             if (inUseArray.some((inUse) => inUse === true)) {
-                this.logger.warn(`Image in use:: '${image.public_id}'`);
+                this.logger.warn(
+                    `Image in use: '${image.public_id}' - for ${
+                        arrName[inUseArray.findIndex((inUse) => inUse === true)]
+                    }`,
+                );
             } else {
                 await this.cloudinaryService.deleteFile(image.public_id).then(() => {
-                    this.logger.verbose(`Deleted:: '${image.public_id}'`);
+                    this.logger.warn(`Deleted: '${image.public_id}'`);
                 });
             }
         }
