@@ -4,7 +4,10 @@ import React, { Suspense, PropsWithChildren } from 'react';
 import { RefineContext } from './_refine_context';
 
 export const metadata: Metadata = {
-    title: 'VePhim Quản Trị',
+    title: {
+        default: 'VePhim Quản Trị',
+        template: '%s | VePhim Quản Trị',
+    },
     description: 'VePhim Quản Trị',
     applicationName: 'VePhim Quản Trị',
     robots: {
