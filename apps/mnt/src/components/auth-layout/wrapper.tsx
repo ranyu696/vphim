@@ -1,25 +1,34 @@
-import { PropsWithChildren } from 'react';
-import { redirect, RedirectType } from 'next/navigation';
-import { getServerSession } from 'next-auth';
+'use client';
 
-import { authOptions } from '~fe/app/api/auth/[...nextauth]/options';
-import type { UserType } from '~api/app/users/user.type';
+import { PropsWithChildren } from 'react';
+import { useRouter } from 'next/navigation';
+import { signOut } from 'next-auth/react';
+import { useGetIdentity } from '@refinedev/core';
+
+import { UserType } from '~api/app/users/user.type';
 import { UserRoleEnum } from '~api/app/users/users.enum';
+
+import Loading from '~mnt/app/loading';
 
 type AuthWrapperProps = PropsWithChildren<{
     accessType: 'public' | 'authenticated' | 'not-authenticated';
 }>;
 
-export async function AuthWrapper({ children, accessType }: AuthWrapperProps) {
-    const auth = await getServerSession(authOptions);
+export function AuthWrapper({ children, accessType }: AuthWrapperProps) {
+    const router = useRouter();
+    const { data: user, isLoading: isIdentityLoading } = useGetIdentity<UserType>();
 
-    const user = auth?.user as UserType | null;
+    if (isIdentityLoading) {
+        return <Loading />;
+    }
+
     const isAuthenticated = !!user;
     const isAdmin = user?.role === UserRoleEnum.Admin;
     const isBlocked = user?.block?.isBlocked;
 
     if (isBlocked) {
-        return redirect('/login?e=blocked', RedirectType.replace);
+        signOut({ redirect: true, callbackUrl: '/login?e=blocked' });
+        return <></>;
     }
 
     switch (accessType) {
@@ -27,21 +36,24 @@ export async function AuthWrapper({ children, accessType }: AuthWrapperProps) {
             return <>{children}</>;
         }
 
+        // This is authenticated layout, if user is not authenticated, redirect to login
+        // This is used for the dashboard page
         case 'authenticated': {
             if (!isAuthenticated) {
-                return redirect('/login', RedirectType.replace);
+                signOut({ redirect: true, callbackUrl: '/login' });
             } else if (!isAdmin) {
-                return redirect('/login?e=not-admin', RedirectType.replace);
+                signOut({ redirect: true, callbackUrl: '/login?e=not-admin' });
             } else {
                 return <>{children}</>;
             }
             break;
         }
 
+        // This is not-authenticated layout, if user is authenticated, redirect to dashboard
+        // This is used for the login page
         case 'not-authenticated': {
             if (isAuthenticated) {
-                // Redirect to the home page if the user is authenticated
-                return redirect('/dashboard', RedirectType.replace);
+                router.replace('/dashboard');
             } else {
                 return <>{children}</>;
             }
@@ -52,5 +64,5 @@ export async function AuthWrapper({ children, accessType }: AuthWrapperProps) {
         }
     }
 
-    return <></>;
+    return <Loading />;
 }
