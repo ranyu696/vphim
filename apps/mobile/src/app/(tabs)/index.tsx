@@ -36,8 +36,59 @@ export default function HomeScreen() {
         dataProviderName: 'graphql',
         meta: { gqlQuery: MOVIES_LIST_QUERY, operation: 'movies' },
         resource: 'movies',
-        filters: [{ field: 'years', value: `${new Date().getFullYear()}`, operator: 'eq' }],
-        sorters: [{ field: 'year', order: 'asc' }],
+        filters: [{ field: 'years', value: `${new Date().getFullYear()},${new Date().getFullYear() - 1}` , operator: 'eq' }],
+        sorters: [{ field: 'year', order: 'desc' }],
+    });
+
+    const { data: cinemaVietMovies, refetch: refetchCinemaVietMovies } = useList<MovieType>({
+        dataProviderName: 'graphql',
+        meta: { gqlQuery: MOVIES_LIST_QUERY, operation: 'movies' },
+        resource: 'movies',
+        filters: [
+            { field: 'cinemaRelease', value: true, operator: 'eq' },
+            { field: 'countries', value: 'viet-nam', operator: 'eq' },
+        ],
+        sorters: [{ field: 'view', order: 'desc' }],
+    });
+
+    const { data: singleHotMovies, refetch: refetchSingleHotMovies } = useList<MovieType>({
+        dataProviderName: 'graphql',
+        meta: { gqlQuery: MOVIES_LIST_QUERY, operation: 'movies' },
+        resource: 'movies',
+        filters: [{ field: 'type', value: 'SINGLE', operator: 'eq' }],
+        sorters: [{ field: 'view', order: 'desc' }],
+    });
+
+    const { data: seriesHotMovies, refetch: refetchSeriesHotMovies } = useList<MovieType>({
+        dataProviderName: 'graphql',
+        meta: { gqlQuery: MOVIES_LIST_QUERY, operation: 'movies' },
+        resource: 'movies',
+        filters: [{ field: 'type', value: 'SERIES', operator: 'eq' }],
+        sorters: [{ field: 'view', order: 'desc' }],
+    });
+
+    const { data: tvShows, refetch: refetchTvShows } = useList<MovieType>({
+        dataProviderName: 'graphql',
+        meta: { gqlQuery: MOVIES_LIST_QUERY, operation: 'movies' },
+        resource: 'movies',
+        filters: [{ field: 'type', value: 'TV_SHOWS', operator: 'eq' }],
+        sorters: [{ field: 'view', order: 'desc' }],
+    });
+
+    const { data: schoolMovies, refetch: refetchSchoolMovies } = useList<MovieType>({
+        dataProviderName: 'graphql',
+        meta: { gqlQuery: MOVIES_LIST_QUERY, operation: 'movies' },
+        resource: 'movies',
+        filters: [{ field: 'categories', value: 'hoc-duong', operator: 'eq' }],
+        sorters: [{ field: 'view', order: 'desc' }],
+    });
+
+    const { data: kidsMovies, refetch: refetchKidsMovies } = useList<MovieType>({
+        dataProviderName: 'graphql',
+        meta: { gqlQuery: MOVIES_LIST_QUERY, operation: 'movies' },
+        resource: 'movies',
+        filters: [{ field: 'categories', value: 'tre-em', operator: 'eq' }],
+        sorters: [{ field: 'view', order: 'desc' }],
     });
 
     const { data: actionMovies, refetch: refetchActionMovies } = useList<MovieType>({
@@ -48,12 +99,45 @@ export default function HomeScreen() {
         sorters: [{ field: 'year', order: 'desc' }],
     });
 
+    const { data: cartoonMovies, refetch: refetchCartoonMovies } = useList<MovieType>({
+        dataProviderName: 'graphql',
+        meta: { gqlQuery: MOVIES_LIST_QUERY, operation: 'movies' },
+        resource: 'movies',
+        filters: [{ field: 'categories', value: 'hoat-hinh', operator: 'eq' }],
+        sorters: [{ field: 'year', order: 'desc' }],
+    });
+
+    const { data: sciFiMovies, refetch: refetchSciFiMovies } = useList<MovieType>({
+        dataProviderName: 'graphql',
+        meta: { gqlQuery: MOVIES_LIST_QUERY, operation: 'movies' },
+        resource: 'movies',
+        filters: [{ field: 'categories', value: 'vien-tuong', operator: 'eq' }],
+        sorters: [{ field: 'year', order: 'desc' }],
+    });
+
+    const { data: mythMovies, refetch: refetchMythMovies } = useList<MovieType>({
+        dataProviderName: 'graphql',
+        meta: { gqlQuery: MOVIES_LIST_QUERY, operation: 'movies' },
+        resource: 'movies',
+        filters: [{ field: 'categories', value: 'than-thoai', operator: 'eq' }],
+        sorters: [{ field: 'year', order: 'desc' }],
+    });
+
     const { isLoading, fadeAnim, overlayStyle, RefreshControl } = useRefreshControl({
         onRefresh: async () => {
             await Promise.allSettled([
                 refetchMostViewed(),
                 refetchNewMovies(),
+                refetchCinemaVietMovies(),
+                refetchSingleHotMovies(),
+                refetchSeriesHotMovies(),
+                refetchTvShows(),
+                refetchSchoolMovies(),
+                refetchKidsMovies(),
                 refetchActionMovies(),
+                refetchCartoonMovies(),
+                refetchSciFiMovies(),
+                refetchMythMovies(),
             ]);
         },
     });
@@ -76,23 +160,94 @@ export default function HomeScreen() {
             sections.push({
                 id: 'new-movies',
                 type: 'movieSection',
-                title: 'Phim Mới',
+                title: 'PHIM MỚI',
                 movies: newMovies.data,
             });
         }
-
-        // Add action movies section if available
+        if (cinemaVietMovies?.data && cinemaVietMovies.data.length > 0) {
+            sections.push({
+                id: 'cinema-viet',
+                type: 'movieSection',
+                title: 'PHIM VIỆT CHIẾU RẠP',
+                movies: cinemaVietMovies.data,
+            });
+        }
+        if (singleHotMovies?.data && singleHotMovies.data.length > 0) {
+            sections.push({
+                id: 'single-hot',
+                type: 'movieSection',
+                title: 'PHIM LẺ ĐANG HOT',
+                movies: singleHotMovies.data,
+            });
+        }
+        if (seriesHotMovies?.data && seriesHotMovies.data.length > 0) {
+            sections.push({
+                id: 'series-hot',
+                type: 'movieSection',
+                title: 'PHIM BỘ ĐANG NỔI',
+                movies: seriesHotMovies.data,
+            });
+        }
+        if (tvShows?.data && tvShows.data.length > 0) {
+            sections.push({
+                id: 'tv-shows',
+                type: 'movieSection',
+                title: 'TV SHOWS XEM NHIỀU',
+                movies: tvShows.data,
+            });
+        }
+        if (schoolMovies?.data && schoolMovies.data.length > 0) {
+            sections.push({
+                id: 'school',
+                type: 'movieSection',
+                title: 'THẾ GIỚI HỌC ĐƯỜNG',
+                movies: schoolMovies.data,
+            });
+        }
+        if (kidsMovies?.data && kidsMovies.data.length > 0) {
+            sections.push({
+                id: 'kids',
+                type: 'movieSection',
+                title: 'VƯƠNG QUỐC TRẺ EM',
+                movies: kidsMovies.data,
+            });
+        }
         if (actionMovies?.data && actionMovies.data.length > 0) {
             sections.push({
                 id: 'action-movies',
                 type: 'movieSection',
-                title: 'Phim Hành Động',
+                title: 'PHIM HÀNH ĐỘNG',
                 movies: actionMovies.data,
+            });
+        }
+        if (cartoonMovies?.data && cartoonMovies.data.length > 0) {
+            sections.push({
+                id: 'cartoon',
+                type: 'movieSection',
+                title: 'PHIM HOẠT HÌNH',
+                movies: cartoonMovies.data,
+            });
+        }
+        if (sciFiMovies?.data && sciFiMovies.data.length > 0) {
+            sections.push({
+                id: 'sci-fi',
+                type: 'movieSection',
+                title: 'PHIM VIỄN TƯỞNG',
+                movies: sciFiMovies.data,
+            });
+        }
+        if (mythMovies?.data && mythMovies.data.length > 0) {
+            sections.push({
+                id: 'myth',
+                type: 'movieSection',
+                title: 'PHIM THẦN THOẠI',
+                movies: mythMovies.data,
             });
         }
 
         return sections;
     };
+
 
     const renderItem = ({ item }: { item: SectionItem }) => {
         if (item.type === 'swiper') {
