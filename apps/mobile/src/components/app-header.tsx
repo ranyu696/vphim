@@ -23,10 +23,10 @@ function AppHeader() {
                         style={styles.logo}
                         source={{
                             uri: getOptimizedImageUrl(
-                                'https://vephim.online/assets/images/logo-mini.png',
+                                `${process.env.EXPO_PUBLIC_BASE_PLAYER_URL}/assets/images/logo-mini.png`,
                                 {
-                                    height: 80,
-                                    width: 80,
+                                    height: 85,
+                                    width: 100,
                                     quality: 100,
                                 },
                             ),
