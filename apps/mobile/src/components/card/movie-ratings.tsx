@@ -114,7 +114,6 @@ function MovieRatings({ imdbId, tmdbId, tmdbType, size = 'medium' }: MovieRating
                     logo={getOptimizedImageUrl(
                         `${process.env.EXPO_PUBLIC_BASE_PLAYER_URL}/assets/imdb_46x22.png`,
                         {
-                            baseUrl: process.env.EXPO_PUBLIC_BASE_PLAYER_URL,
                             height: 120,
                             width: 120,
                             quality: 100,
@@ -128,12 +127,14 @@ function MovieRatings({ imdbId, tmdbId, tmdbType, size = 'medium' }: MovieRating
             {tmdbData && tmdbId && tmdbType && (
                 <RatingTag
                     color="#01b4e4"
-                    logo={getOptimizedImageUrl('https://vephim.online/assets/tmdb.svg', {
-                        baseUrl: process.env.EXPO_PUBLIC_BASE_PLAYER_URL,
-                        height: 120,
-                        width: 120,
-                        quality: 100,
-                    })}
+                    logo={getOptimizedImageUrl(
+                        `${process.env.EXPO_PUBLIC_BASE_PLAYER_URL}/assets/tmdb.svg`,
+                        {
+                            height: 120,
+                            width: 120,
+                            quality: 100,
+                        },
+                    )}
                     rating={tmdbData.rating}
                     votes={tmdbData.votes}
                     url={`https://www.themoviedb.org/${tmdbType}/${tmdbId}`}

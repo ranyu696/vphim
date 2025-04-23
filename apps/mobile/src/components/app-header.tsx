@@ -27,7 +27,6 @@ function AppHeader() {
                                 {
                                     height: 80,
                                     width: 80,
-                                    baseUrl: process.env.EXPO_PUBLIC_BASE_PLAYER_URL,
                                     quality: 100,
                                 },
                             ),
