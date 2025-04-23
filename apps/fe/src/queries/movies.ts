@@ -27,6 +27,7 @@ export const GET_MOVIE_QUERY = gql`
             type
             updatedAt
             createdAt
+            deletedAt
             view
             year
             countries {

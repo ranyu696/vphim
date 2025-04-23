@@ -28,6 +28,7 @@ export async function getMovieBySlug(slug: string): Promise<MovieType> {
             revalidate: 3600,
             tags: ['movies', slug, `/phim/${slug}`],
         },
+        // cache: 'no-store',
     });
     if (!res.ok) {
         throw new Error('Failed to fetch movie data');
@@ -67,6 +68,7 @@ export async function getMovies(data: {
             revalidate: 3600,
             tags: ['movies'],
         },
+        // cache: 'no-store',
     });
     if (!res.ok) {
         throw new Error('Failed to fetch movies');

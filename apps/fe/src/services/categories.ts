@@ -45,6 +45,7 @@ export async function getCategories(data: {
             revalidate: 3600,
             tags: ['categories'],
         },
+        // cache: 'no-store',
     });
     if (!res.ok) {
         throw new Error('Failed to fetch categories');

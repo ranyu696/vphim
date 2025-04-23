@@ -46,6 +46,7 @@ export async function getRegions(data: {
             revalidate: 3600,
             tags: ['regions', 'countries'],
         },
+        // cache: 'no-store',
     });
     if (!res.ok) {
         throw new Error('Failed to fetch regions');
