@@ -6,9 +6,7 @@ import {
     Col,
     Statistic,
     Typography,
-    Badge,
     Table,
-    Timeline,
     Empty,
     Spin,
     Button,
@@ -17,21 +15,15 @@ import {
     Tooltip,
 } from 'antd';
 import {
-    RiseOutlined,
     EyeOutlined,
-    CommentOutlined,
     FileAddOutlined,
     EditOutlined,
     FileDoneOutlined,
     ReloadOutlined,
     LoadingOutlined,
+    UserAddOutlined,
 } from '@ant-design/icons';
-import type {
-    DashboardData,
-    TopViewedMovie,
-    TrendingMovie,
-    RecentActivity,
-} from '~api/app/dashboard/dashboard.type';
+import type { DashboardData, TopViewedMovie } from '~api/app/dashboard/dashboard.type';
 
 const { Title, Text } = Typography;
 
@@ -52,6 +44,7 @@ const viTranslations = {
     moviesAddedToday: 'Phim Thêm Hôm Nay',
     moviesUpdatedToday: 'Phim Cập Nhật Hôm Nay',
     commentsToday: 'Bình Luận Hôm Nay',
+    newUsersToday: 'Người Dùng Mới Hôm Nay',
     topViewedMovies: 'Phim Được Xem Nhiều Nhất',
     trendingToday: 'Phim Thịnh Hành Hôm Nay',
     moviesByType: 'Phim Theo Đinh dạng',
@@ -62,6 +55,7 @@ const viTranslations = {
     typeColumn: 'Đinh dạng',
     countColumn: 'Số Lượng',
     lastUpdatedColumn: 'Cập Nhật Lúc',
+    navigateToAnalytics: 'Xem chi tiết thống kê',
 };
 
 // Reusable RefreshableCard component with pulsing animation for loading
@@ -69,22 +63,26 @@ const RefreshableCard: React.FC<{
     title: string;
     loading?: boolean;
     extra?: React.ReactNode;
+    onClick?: () => void;
     children: React.ReactNode;
-}> = ({ title, loading = false, extra, children }) => {
+}> = ({ title, loading = false, extra, children, onClick }) => {
     return (
         <Card
             title={title}
             extra={extra}
             className={loading ? 'pulse-animation' : ''}
-            style={
-                loading
+            style={{
+                ...(loading
                     ? {
                           position: 'relative',
                           overflow: 'hidden',
-                          boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
                       }
-                    : { boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }
-            }
+                    : {}),
+                boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
+                cursor: onClick ? 'pointer' : 'default',
+            }}
+            onClick={onClick}
+            hoverable={!!onClick}
         >
             {children}
             <style jsx global>{`
@@ -248,6 +246,7 @@ const MovieStatsDashboard: React.FC = () => {
             moviesAddedToday: 0,
             moviesUpdatedToday: 0,
             commentsToday: 0,
+            newUsersToday: 0,
         },
         topViewedMovies = [],
         trendingToday = [],
@@ -279,36 +278,6 @@ const MovieStatsDashboard: React.FC = () => {
         },
     ];
 
-    // Columns for the trending movies table
-    const trendingColumns = [
-        {
-            title: viTranslations.movieColumn,
-            dataIndex: 'name',
-            key: 'name',
-            render: (text: string, record: TrendingMovie) => (
-                <a href={`/movies/show/${record._id}`} target="_blank" rel="noopener noreferrer">
-                    {text}
-                </a>
-            ),
-        },
-        {
-            title: viTranslations.viewsTodayColumn,
-            dataIndex: 'viewsToday',
-            key: 'viewsToday',
-            render: (views: number) => (
-                <Tooltip title={views.toLocaleString('vi-VN')}>
-                    <strong>{views?.toLocaleString('vi-VN') || 0}</strong>
-                </Tooltip>
-            ),
-        },
-        {
-            title: viTranslations.lastUpdatedColumn,
-            dataIndex: 'updatedAt',
-            key: 'updatedAt',
-            render: (date: Date) => new Date(date).toLocaleString('vi-VN'),
-        },
-    ];
-
     return (
         <div>
             <div
@@ -334,56 +303,67 @@ const MovieStatsDashboard: React.FC = () => {
             {/* Stats Cards */}
             <Row gutter={[16, 16]}>
                 <Col xs={24} sm={12} lg={6}>
-                    <RefreshableCard title={viTranslations.totalMovies} loading={isLoadingData}>
-                        <Statistic
-                            title=""
-                            value={overview.totalMovies}
-                            prefix={<FileDoneOutlined />}
-                            loading={isLoadingData}
-                            formatter={(value) => `${value.toLocaleString('vi-VN')}`}
-                        />
-                    </RefreshableCard>
+                    <Tooltip title={viTranslations.navigateToAnalytics}>
+                        <RefreshableCard title={viTranslations.totalMovies} loading={isLoadingData}>
+                            <Statistic
+                                title=""
+                                value={overview.totalMovies}
+                                prefix={<FileDoneOutlined />}
+                                loading={isLoadingData}
+                                formatter={(value) => `${value.toLocaleString('vi-VN')}`}
+                            />
+                        </RefreshableCard>
+                    </Tooltip>
                 </Col>
                 <Col xs={24} sm={12} lg={6}>
-                    <RefreshableCard
-                        title={viTranslations.moviesAddedToday}
-                        loading={isLoadingData}
-                    >
-                        <Statistic
-                            title=""
-                            value={overview.moviesAddedToday}
-                            valueStyle={{ color: '#3f8600' }}
-                            prefix={<FileAddOutlined />}
+                    <Tooltip title={viTranslations.navigateToAnalytics}>
+                        <RefreshableCard
+                            title={viTranslations.moviesAddedToday}
                             loading={isLoadingData}
-                            formatter={(value) => `${value.toLocaleString('vi-VN')}`}
-                        />
-                    </RefreshableCard>
+                        >
+                            <Statistic
+                                title=""
+                                value={overview.moviesAddedToday}
+                                valueStyle={{ color: '#3f8600' }}
+                                prefix={<FileAddOutlined />}
+                                loading={isLoadingData}
+                                formatter={(value) => `${value.toLocaleString('vi-VN')}`}
+                            />
+                        </RefreshableCard>
+                    </Tooltip>
                 </Col>
                 <Col xs={24} sm={12} lg={6}>
-                    <RefreshableCard
-                        title={viTranslations.moviesUpdatedToday}
-                        loading={isLoadingData}
-                    >
-                        <Statistic
-                            title=""
-                            value={overview.moviesUpdatedToday}
-                            valueStyle={{ color: '#1890ff' }}
-                            prefix={<EditOutlined />}
+                    <Tooltip title={viTranslations.navigateToAnalytics}>
+                        <RefreshableCard
+                            title={viTranslations.moviesUpdatedToday}
                             loading={isLoadingData}
-                            formatter={(value) => `${value.toLocaleString('vi-VN')}`}
-                        />
-                    </RefreshableCard>
+                        >
+                            <Statistic
+                                title=""
+                                value={overview.moviesUpdatedToday}
+                                valueStyle={{ color: '#1890ff' }}
+                                prefix={<EditOutlined />}
+                                loading={isLoadingData}
+                                formatter={(value) => `${value.toLocaleString('vi-VN')}`}
+                            />
+                        </RefreshableCard>
+                    </Tooltip>
                 </Col>
                 <Col xs={24} sm={12} lg={6}>
-                    <RefreshableCard title={viTranslations.commentsToday} loading={isLoadingData}>
-                        <Statistic
-                            title=""
-                            value={overview.commentsToday}
-                            prefix={<CommentOutlined />}
+                    <Tooltip title={viTranslations.navigateToAnalytics}>
+                        <RefreshableCard
+                            title={viTranslations.newUsersToday}
                             loading={isLoadingData}
-                            formatter={(value) => `${value.toLocaleString('vi-VN')}`}
-                        />
-                    </RefreshableCard>
+                        >
+                            <Statistic
+                                title=""
+                                value={overview.newUsersToday}
+                                prefix={<UserAddOutlined />}
+                                loading={isLoadingData}
+                                formatter={(value) => `${value.toLocaleString('vi-VN')}`}
+                            />
+                        </RefreshableCard>
+                    </Tooltip>
                 </Col>
             </Row>
 
@@ -412,34 +392,6 @@ const MovieStatsDashboard: React.FC = () => {
                         />
                     </RefreshableCard>
                 </Col>
-
-                {/* Trending Today */}
-                <Col xs={24} lg={12}>
-                    <RefreshableCard
-                        title={viTranslations.trendingToday}
-                        extra={<RiseOutlined />}
-                        loading={isLoadingData}
-                    >
-                        <Table
-                            dataSource={trendingToday}
-                            columns={trendingColumns}
-                            rowKey="_id"
-                            pagination={false}
-                            size="small"
-                            loading={isLoadingData}
-                            locale={{
-                                emptyText: isLoadingData ? (
-                                    <Skeleton active paragraph={{ rows: 3 }} />
-                                ) : (
-                                    <Empty description="Không có dữ liệu" />
-                                ),
-                            }}
-                        />
-                    </RefreshableCard>
-                </Col>
-            </Row>
-
-            <Row gutter={[16, 16]} style={{ marginTop: '16px' }}>
                 {/* Movies by Type */}
                 <Col xs={24} lg={12}>
                     <RefreshableCard
@@ -477,44 +429,6 @@ const MovieStatsDashboard: React.FC = () => {
                                 ),
                             }}
                         />
-                    </RefreshableCard>
-                </Col>
-
-                {/* Recent Activities */}
-                <Col xs={24} lg={12}>
-                    <RefreshableCard
-                        title={viTranslations.recentActivities}
-                        extra={<Badge count={recentActivities.length} overflowCount={99} />}
-                        loading={isLoadingData}
-                    >
-                        {isLoadingData ? (
-                            <Skeleton active paragraph={{ rows: 6 }} />
-                        ) : recentActivities.length === 0 ? (
-                            <Empty description="Không có hoạt động gần đây" />
-                        ) : (
-                            <Timeline
-                                items={recentActivities.map((activity: RecentActivity) => ({
-                                    color:
-                                        activity.type === 'movie_add'
-                                            ? 'green'
-                                            : activity.type === 'movie_update'
-                                            ? 'blue'
-                                            : 'orange',
-                                    children: (
-                                        <>
-                                            <p>{`Phim "${activity.entityName}" đã được ${
-                                                activity.type === 'movie_add' ? 'thêm' : 'cập nhật'
-                                            }`}</p>
-                                            <Text type="secondary">
-                                                {new Date(activity.timestamp).toLocaleString(
-                                                    'vi-VN',
-                                                )}
-                                            </Text>
-                                        </>
-                                    ),
-                                }))}
-                            />
-                        )}
                     </RefreshableCard>
                 </Col>
             </Row>
