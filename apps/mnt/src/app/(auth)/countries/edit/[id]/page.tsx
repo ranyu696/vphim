@@ -1,6 +1,6 @@
 'use client';
 
-import { Edit, useForm } from '@refinedev/antd';
+import { Edit, ListButton, RefreshButton, useForm } from '@refinedev/antd';
 import { type RegionType } from '~api/app/regions/region.type';
 import { BaseResourceForm } from '~mnt/components/form/resource/base-resource-form';
 import { MNT_REGION_QUERY, MNT_REGION_UPDATE } from '~mnt/queries/region.query';
@@ -37,6 +37,12 @@ export default function EditRegion({ params }: EditRegionPageProps) {
     return (
         <Edit
             title={`Chỉnh sửa quốc gia "${formProps.initialValues?.name}"`}
+            headerButtons={({ listButtonProps, refreshButtonProps }) => (
+                <>
+                    <ListButton {...listButtonProps}>Danh sách khu vực/quốc gia</ListButton>
+                    <RefreshButton {...refreshButtonProps}>Làm mới</RefreshButton>
+                </>
+            )}
             saveButtonProps={saveButtonProps}
         >
             <BaseResourceForm

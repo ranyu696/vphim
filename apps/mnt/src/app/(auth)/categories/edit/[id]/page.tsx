@@ -1,6 +1,6 @@
 'use client';
 
-import { Edit, useForm } from '@refinedev/antd';
+import { Edit, RefreshButton, ListButton, useForm } from '@refinedev/antd';
 import { type CategoryType } from '~api/app/categories/category.type';
 import { BaseResourceForm } from '~mnt/components/form/resource/base-resource-form';
 import { MNT_CATEGORY_QUERY, MNT_CATEGORY_UPDATE } from '~mnt/queries/category.query';
@@ -37,6 +37,12 @@ export default function EditCategory({ params }: EditCategoryPageProps) {
     return (
         <Edit
             title={`Chỉnh sửa thể loại "${formProps.initialValues?.name}"`}
+            headerButtons={({ listButtonProps, refreshButtonProps }) => (
+                <>
+                    <ListButton {...listButtonProps}>Danh sách thể loại</ListButton>
+                    <RefreshButton {...refreshButtonProps}>Làm mới</RefreshButton>
+                </>
+            )}
             saveButtonProps={saveButtonProps}
         >
             <BaseResourceForm

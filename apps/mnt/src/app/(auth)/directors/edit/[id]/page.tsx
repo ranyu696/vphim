@@ -1,6 +1,6 @@
 'use client';
 
-import { Edit, useForm } from '@refinedev/antd';
+import { Edit, ListButton, RefreshButton, useForm } from '@refinedev/antd';
 import { type DirectorType } from '~api/app/directors/director.type';
 import { PersonResourceForm } from '~mnt/components/form/resource/person-resource-form';
 import { MNT_DIRECTOR_QUERY, MNT_DIRECTOR_UPDATE } from '~mnt/queries/director.query';
@@ -37,6 +37,12 @@ export default function EditDirector({ params }: EditDirectorPageProps) {
     return (
         <Edit
             title={`Chỉnh sửa đạo diễn "${formProps.initialValues?.name}"`}
+            headerButtons={({ listButtonProps, refreshButtonProps }) => (
+                <>
+                    <ListButton {...listButtonProps}>Danh sách đạo diễn</ListButton>
+                    <RefreshButton {...refreshButtonProps}>Làm mới</RefreshButton>
+                </>
+            )}
             saveButtonProps={saveButtonProps}
         >
             <PersonResourceForm
