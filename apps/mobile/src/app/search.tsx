@@ -353,8 +353,6 @@ export default function SearchScreen() {
     };
 
     const renderEmptyState = useCallback(() => {
-        if (debouncedSearchQuery.trim() === '') return null;
-
         return (
             <Animated.View
                 entering={SlideInDown.duration(300)}
@@ -365,7 +363,9 @@ export default function SearchScreen() {
                     Không tìm thấy phim
                 </Text>
                 <Text style={[styles.emptyStateDescription, { color: theme['text-hint-color'] }]}>
-                    Không thể tìm thấy phim phù hợp với "{debouncedSearchQuery}"
+                    {debouncedSearchQuery?.trim()
+                        ? `Không thể tìm thấy phim phù hợp với "${debouncedSearchQuery?.trim()}"`
+                        : 'Không có phim phù hợp với tìm kiếm của bạn'}
                 </Text>
                 <Button
                     appearance="outline"
