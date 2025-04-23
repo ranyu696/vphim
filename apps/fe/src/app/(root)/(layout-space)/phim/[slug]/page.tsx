@@ -4,6 +4,7 @@ import { Metadata, ResolvingMetadata } from 'next';
 import { Movie } from '@/components/pages/movie';
 import { getOptimizedImageUrl } from '@/libs/utils/movie.util';
 import { getMovieBySlug } from '@/services/movies';
+import { redirect, RedirectType } from 'next/navigation';
 
 export const dynamic = 'force-dynamic';
 export const dynamicParams = true;
@@ -21,6 +22,13 @@ export async function generateMetadata(
     parent: ResolvingMetadata,
 ): Promise<Metadata> {
     const movie = await getMovieBySlug(params.slug);
+
+    if (!movie) {
+        return {
+            title: 'VePhim',
+            description: 'VePhim',
+        };
+    }
 
     // Optionally access and extend parent metadata
     const previousImages = (await parent).openGraph?.images || [];
@@ -91,6 +99,10 @@ export async function generateMetadata(
 
 export default async function MoviePage({ params }: MoviePageProps) {
     const movie = await getMovieBySlug(params.slug);
+
+    if (!movie) {
+        return redirect('/', RedirectType.replace);
+    }
 
     return <Movie slug={params?.slug ?? ''} movie={movie} />;
 }

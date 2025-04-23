@@ -32,8 +32,11 @@ export async function getMovieBySlug(slug: string): Promise<MovieType> {
     if (!res.ok) {
         throw new Error('Failed to fetch movie data');
     }
-    const result = await res.json();
-    return result?.data?.movie as MovieType;
+    const result = (await res.json())?.data?.movie as MovieType;
+    if (result?.deletedAt) {
+        return null;
+    }
+    return result;
 }
 
 export async function getMovies(data: {
