@@ -38,6 +38,14 @@ export default function MovieEditPage({ params }: EditMoviePageProps) {
             },
         },
         invalidates: ['list', 'detail'],
+        errorNotification: {
+            type: 'error',
+            message: 'Lỗi khi chỉnh sửa phim, vui lòng thử lại',
+        },
+        successNotification: {
+            type: 'success',
+            message: 'Phim đã được chỉnh sửa thành công',
+        },
     });
     const movie = query?.data?.data;
 
@@ -83,7 +91,7 @@ export default function MovieEditPage({ params }: EditMoviePageProps) {
 
     return (
         <Edit
-            title={`Chỉnh sửa phim "${movie?.originName}"`}
+            title={`Chỉnh sửa phim "${movie?.originName || movie?.name}"`}
             headerButtons={({ listButtonProps, refreshButtonProps }) => (
                 <>
                     <Button

@@ -50,7 +50,7 @@ export default function UserShow() {
         <Show
             canEdit={false}
             isLoading={isLoading}
-            title="Thông tin người dùng"
+            title={`Thông tin người dùng "${record?.fullName || record?.email}"`}
             headerButtons={({ listButtonProps }) => (
                 <>
                     <ListButton {...listButtonProps}>Danh sách người dùng</ListButton>

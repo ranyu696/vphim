@@ -20,6 +20,14 @@ export default function MovieCreatePage() {
             operation: 'createMovie',
         },
         invalidates: ['list', 'detail'],
+        errorNotification: {
+            type: 'error',
+            message: 'Lỗi khi thêm phim, vui lòng thử lại',
+        },
+        successNotification: {
+            type: 'success',
+            message: 'Phim đã được thêm thành công',
+        },
     });
 
     const { ClearFormButton, handleValuesChange, handleFormFinish } = useFormLocalStorage({

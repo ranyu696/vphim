@@ -24,6 +24,14 @@ export default function EditDirector({ params }: EditDirectorPageProps) {
                 },
             },
         },
+        errorNotification: {
+            type: 'error',
+            message: 'Lỗi khi chỉnh sửa đạo diễn, vui lòng thử lại',
+        },
+        successNotification: {
+            type: 'success',
+            message: 'Đạo diễn đã được chỉnh sửa thành công',
+        },
     });
 
     return (

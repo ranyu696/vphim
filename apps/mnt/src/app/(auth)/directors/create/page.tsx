@@ -19,6 +19,14 @@ export default function CreateRegion() {
             gqlMutation: MNT_DIRECTOR_CREATE,
             operation: 'createDirector',
         },
+        errorNotification: {
+            type: 'error',
+            message: 'Lỗi khi thêm đạo diễn, vui lòng thử lại',
+        },
+        successNotification: {
+            type: 'success',
+            message: 'Đạo diễn đã được thêm thành công',
+        },
     });
 
     const { ClearFormButton, handleValuesChange, handleFormFinish } = useFormLocalStorage({

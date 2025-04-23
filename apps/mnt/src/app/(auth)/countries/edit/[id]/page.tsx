@@ -24,6 +24,14 @@ export default function EditRegion({ params }: EditRegionPageProps) {
                 },
             },
         },
+        errorNotification: {
+            type: 'error',
+            message: 'Lỗi khi chỉnh sửa khu vực/quốc gia, vui lòng thử lại',
+        },
+        successNotification: {
+            type: 'success',
+            message: 'Khu vực/quốc gia đã được chỉnh sửa thành công',
+        },
     });
 
     return (

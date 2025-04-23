@@ -24,6 +24,14 @@ export default function EditActor({ params }: EditActorPageProps) {
                 },
             },
         },
+        errorNotification: {
+            type: 'error',
+            message: 'Lỗi khi chỉnh sửa diễn viên, vui lòng thử lại',
+        },
+        successNotification: {
+            type: 'success',
+            message: 'Diễn viên đã được chỉnh sửa thành công',
+        },
     });
 
     return (

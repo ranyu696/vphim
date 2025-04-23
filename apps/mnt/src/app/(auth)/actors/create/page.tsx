@@ -19,6 +19,14 @@ export default function CreateActor() {
             gqlMutation: MNT_ACTOR_CREATE,
             operation: 'createActor',
         },
+        errorNotification: {
+            type: 'error',
+            message: 'Lỗi khi thêm diễn viên, vui lòng thử lại',
+        },
+        successNotification: {
+            type: 'success',
+            message: 'Diễn viên đã được thêm thành công',
+        },
     });
 
     const { ClearFormButton, handleValuesChange, handleFormFinish } = useFormLocalStorage({

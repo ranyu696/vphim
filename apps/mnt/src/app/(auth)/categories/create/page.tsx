@@ -19,6 +19,14 @@ export default function CreateCategory() {
             gqlMutation: MNT_CATEGORY_CREATE,
             operation: 'createCategory',
         },
+        errorNotification: {
+            type: 'error',
+            message: 'Lỗi khi thêm thể loại, vui lòng thử lại',
+        },
+        successNotification: {
+            type: 'success',
+            message: 'Thể loại đã được thêm thành công',
+        },
     });
 
     const { ClearFormButton, handleValuesChange, handleFormFinish } = useFormLocalStorage({

@@ -24,6 +24,14 @@ export default function EditCategory({ params }: EditCategoryPageProps) {
                 },
             },
         },
+        errorNotification: {
+            type: 'error',
+            message: 'Lỗi khi chỉnh sửa thể loại, vui lòng thử lại',
+        },
+        successNotification: {
+            type: 'success',
+            message: 'Thể loại đã được chỉnh sửa thành công',
+        },
     });
 
     return (

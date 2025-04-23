@@ -19,6 +19,14 @@ export default function CreateRegion() {
             gqlMutation: MNT_REGION_CREATE,
             operation: 'createRegion',
         },
+        errorNotification: {
+            type: 'error',
+            message: 'Lỗi khi thêm khu vực/quốc gia, vui lòng thử lại',
+        },
+        successNotification: {
+            type: 'success',
+            message: 'Khu vực/quốc gia đã được thêm thành công',
+        },
     });
 
     const { ClearFormButton, handleValuesChange, handleFormFinish } = useFormLocalStorage({
@@ -29,7 +37,7 @@ export default function CreateRegion() {
 
     return (
         <Create
-            title="Thêm quốc gia"
+            title="Thêm khu vực/quốc gia"
             saveButtonProps={saveButtonProps}
             headerButtons={<ClearFormButton />}
         >
