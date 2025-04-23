@@ -3,7 +3,6 @@ import {
     StyleSheet,
     View,
     TouchableOpacity,
-    Image,
     SafeAreaView,
     Keyboard,
     ScrollView,
@@ -13,7 +12,6 @@ import {
     Layout,
     Input,
     Text,
-    ListItem,
     useTheme,
     Divider,
     Button,
@@ -30,12 +28,9 @@ import {
     SortDesc,
     AlertCircle,
     Zap,
-    EyeIcon,
-    Calendar,
 } from 'lucide-react-native';
 import { useInfiniteList, CrudFilters, LogicalFilter, useList } from '@refinedev/core';
 import { useDebounce } from 'use-debounce';
-import { capitalize } from 'lodash';
 import Animated, {
     FadeIn,
     FadeOut,
@@ -44,12 +39,10 @@ import Animated, {
     SlideOutUp,
 } from 'react-native-reanimated';
 
-import { MovieType } from '~api/app/movies/movie.type';
+import type { MovieType } from '~api/app/movies/movie.type';
 import type { Category } from '~api/app/categories/category.schema';
 import type { Region } from '~api/app/regions/region.schema';
 
-import { MOVIES_LIST_QUERY } from '~fe/queries/movies';
-import { getOptimizedImageUrl } from '~fe/libs/utils/movie.util';
 import { CATEGORIES_LIST_QUERY } from '~fe/queries/categories';
 import { REGIONS_LIST_QUERY } from '~fe/queries/regions';
 import { movieTypeTranslations } from '~fe/constants/translation-enum';
@@ -57,6 +50,8 @@ import { movieTypeTranslations } from '~fe/constants/translation-enum';
 import { removeStyleProperty } from '~mb/libs/utils';
 import { useAuth } from '~mb/hooks/use-auth';
 import { AgeVerificationModal } from '~mb/components/modals/age-verification-modal';
+import { MOVIES_MOBILE_SEARCH_QUERY } from '~mb/queries/movie';
+import { SearchMovieCard } from '../components/card/search-movie-card';
 
 // Define movie type translations (matches web version)
 
@@ -144,7 +139,7 @@ export default function SearchScreen() {
             resource: 'movies',
             dataProviderName: 'graphql',
             meta: {
-                gqlQuery: MOVIES_LIST_QUERY,
+                gqlQuery: MOVIES_MOBILE_SEARCH_QUERY,
             },
             pagination: {
                 pageSize: 10,
@@ -305,6 +300,7 @@ export default function SearchScreen() {
         handleFilterChange('useAI', checked);
     };
 
+    // Import the SearchMovieCard component
     const renderMovieItem = useCallback(
         ({ item }: { item: MovieType }) => (
             <Animated.View
@@ -312,136 +308,10 @@ export default function SearchScreen() {
                 layout={LinearTransition}
                 style={styles.movieItemContainer}
             >
-                <TouchableOpacity
-                    activeOpacity={0.7}
-                    onPress={() => router.push(`/movie/${item.slug}`)}
-                    style={[
-                        styles.movieItemTouchable,
-                        { backgroundColor: theme['background-basic-color-1'] },
-                    ]}
-                >
-                    <View style={styles.posterContainer}>
-                        <Image
-                            source={{
-                                uri: getOptimizedImageUrl(item?.posterUrl || item?.thumbUrl, {
-                                    width: 480,
-                                    height: 854,
-                                    quality: 60,
-                                }),
-                            }}
-                            style={styles.poster}
-                            resizeMode="cover"
-                        />
-                        {item.quality && (
-                            <View
-                                style={[
-                                    styles.qualityBadge,
-                                    { backgroundColor: theme['color-primary-500'] },
-                                ]}
-                            >
-                                <Text style={styles.qualityText}>{item.quality.toUpperCase()}</Text>
-                            </View>
-                        )}
-                    </View>
-
-                    <View style={styles.movieInfo}>
-                        <Text
-                            style={[styles.movieTitle, { color: theme['text-basic-color'] }]}
-                            numberOfLines={1}
-                            ellipsizeMode="tail"
-                        >
-                            {item.name}
-                        </Text>
-
-                        {item.originName && (
-                            <Text
-                                style={[styles.originalTitle, { color: theme['text-hint-color'] }]}
-                                numberOfLines={1}
-                                ellipsizeMode="tail"
-                            >
-                                {item.originName}
-                            </Text>
-                        )}
-
-                        <View style={styles.metaInfo}>
-                            {item.year && (
-                                <View style={styles.metaItem}>
-                                    <Calendar size={12} color={theme['text-hint-color']} />
-                                    <Text
-                                        style={[
-                                            styles.metaText,
-                                            { color: theme['text-hint-color'] },
-                                        ]}
-                                    >
-                                        {item.year}
-                                    </Text>
-                                </View>
-                            )}
-
-                            {item.type &&
-                                movieTypeTranslations[
-                                    item.type as keyof typeof movieTypeTranslations
-                                ] && (
-                                    <View
-                                        style={[
-                                            styles.typeBadge,
-                                            {
-                                                backgroundColor:
-                                                    theme['color-basic-transparent-200'],
-                                            },
-                                        ]}
-                                    >
-                                        <Text
-                                            style={[
-                                                styles.typeText,
-                                                { color: theme['text-hint-color'] },
-                                            ]}
-                                        >
-                                            {
-                                                movieTypeTranslations[
-                                                    item.type as keyof typeof movieTypeTranslations
-                                                ]
-                                            }
-                                        </Text>
-                                    </View>
-                                )}
-                        </View>
-
-                        <View style={styles.statsContainer}>
-                            <View style={styles.stat}>
-                                <EyeIcon size={12} color={theme['text-hint-color']} />
-                                <Text
-                                    style={[styles.statText, { color: theme['text-hint-color'] }]}
-                                >
-                                    {item?.view && item?.view > 1000
-                                        ? `${(item?.view / 1000).toFixed(1)}k`
-                                        : item?.view || '0'}
-                                </Text>
-                            </View>
-
-                            {item.lang && (
-                                <View
-                                    style={[
-                                        styles.langBadge,
-                                        { backgroundColor: theme['color-basic-transparent-200'] },
-                                    ]}
-                                >
-                                    <Text
-                                        style={[
-                                            styles.langText,
-                                            { color: theme['text-hint-color'] },
-                                        ]}
-                                    >
-                                        {capitalize(item.lang)}
-                                    </Text>
-                                </View>
-                            )}
-                        </View>
-                    </View>
-                </TouchableOpacity>
+                <SearchMovieCard movie={item} onPress={() => router.push(`/movie/${item.slug}`)} />
             </Animated.View>
         ),
-        [router, theme],
+        [router],
     );
 
     const keyExtractor = useCallback((item: MovieType) => item._id.toString(), []);
@@ -990,7 +860,7 @@ const styles = StyleSheet.create({
     searchContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginHorizontal: 16,
+        marginHorizontal: 10,
         marginVertical: 12,
     },
     backButton: {
@@ -1003,7 +873,7 @@ const styles = StyleSheet.create({
     },
     filterContainer: {
         flexDirection: 'row',
-        marginHorizontal: 16,
+        marginHorizontal: 10,
         marginBottom: 12,
         justifyContent: 'space-between',
         alignItems: 'center',
@@ -1134,7 +1004,6 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.1,
         shadowRadius: 2,
         elevation: 2,
-        borderRadius: 12,
     },
     movieItemTouchable: {
         flexDirection: 'row',
