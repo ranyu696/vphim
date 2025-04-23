@@ -8,8 +8,11 @@ import {
     HttpCode,
     SerializeOptions,
 } from '@nestjs/common';
-import { AuthService } from './auth.service';
 import { AuthGuard } from '@nestjs/passport';
+import { ApiOkResponse, ApiTags, ApiBody } from '@nestjs/swagger';
+import { Throttle } from '@nestjs/throttler';
+
+import { AuthService } from './auth.service';
 import {
     AuthLoginPasswordlessDto,
     AuthValidatePasswordlessDto,
@@ -20,9 +23,7 @@ import {
     AuthLoginGithubDto,
 } from './dtos';
 import { AuthRegisterConfirmDto } from './dtos/auth-register-confirm.dto';
-import { ApiOkResponse, ApiTags, ApiBody } from '@nestjs/swagger';
 import { UserJwt } from './strategies/types';
-
 @ApiTags('auth')
 @Controller('auth')
 export class AuthController {
@@ -40,6 +41,7 @@ export class AuthController {
         return this.authService.registerConfirm(hash);
     }
 
+    @Throttle({ default: { limit: 1, ttl: 1000 * 60 * 3 } })
     @ApiOkResponse()
     @HttpCode(HttpStatus.OK)
     @Post('login/pwdless')
