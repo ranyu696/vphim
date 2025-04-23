@@ -23,22 +23,22 @@ import { APP_GUARD } from '@nestjs/core';
             load: [authConfig],
         }),
         RedisModule,
-        ThrottlerModule.forRootAsync({
-            imports: [ConfigModule, RedisModule],
-            inject: [ConfigService, RedisService],
-            useFactory: (configService: ConfigService, redisService: RedisService) => {
-                return {
-                    throttlers: [
-                        {
-                            name: 'request-passwordless',
-                            limit: 1,
-                            ttl: 1000 * 60 * 3,
-                        },
-                    ],
-                    storage: new ThrottlerStorageRedisService(redisService.getClient),
-                };
-            },
-        }),
+        // ThrottlerModule.forRootAsync({
+        //     imports: [ConfigModule, RedisModule],
+        //     inject: [ConfigService, RedisService],
+        //     useFactory: (configService: ConfigService, redisService: RedisService) => {
+        //         return {
+        //             throttlers: [
+        //                 {
+        //                     name: 'request-passwordless',
+        //                     limit: 1,
+        //                     ttl: 1000 * 60 * 3,
+        //                 },
+        //             ],
+        //             storage: new ThrottlerStorageRedisService(redisService.getClient),
+        //         };
+        //     },
+        // }),
         JwtModule.register({}),
         BullModule.registerQueue({
             name: 'BULLMQ_MAIL_QUEUE',
@@ -54,10 +54,10 @@ import { APP_GUARD } from '@nestjs/core';
         JwtGqlStrategy,
         JwtRefreshStrategy,
         OptionalAuthGuard,
-        {
-            provide: APP_GUARD,
-            useClass: ThrottlerGuard,
-        },
+        // {
+        //     provide: APP_GUARD,
+        //     useClass: ThrottlerGuard,
+        // },
     ],
     exports: [AuthService, OptionalAuthGuard],
 })

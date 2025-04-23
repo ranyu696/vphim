@@ -42,8 +42,8 @@ export class AuthController {
         return this.authService.registerConfirm(hash);
     }
 
-    @UseGuards(ThrottlerGuard)
-    @Throttle({ 'request-passwordless': { limit: 1, ttl: 1000 * 60 * 3 } })
+    // @UseGuards(ThrottlerGuard)
+    // @Throttle({ 'request-passwordless': { limit: 1, ttl: 1000 * 60 * 3 } })
     @ApiOkResponse({ description: 'Request login passwordless' })
     @ApiTooManyRequestsResponse({ description: 'Too many requests' })
     @HttpCode(HttpStatus.OK)
