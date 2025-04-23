@@ -1001,7 +1001,10 @@ export const MovieForm: React.FC<MovieFormProps> = ({ formProps, query, mode }) 
                             <Form.Item
                                 name="posterUrl"
                                 label="Ảnh dọc (Poster)"
-                                rules={[{ type: 'url', message: 'URL ảnh dọc phải hợp lệ' }]}
+                                rules={[
+                                    { required: true, message: 'Ảnh poster không được để trống' },
+                                    { type: 'url', message: 'URL ảnh poster phải hợp lệ' },
+                                ]}
                             >
                                 <Space direction="vertical" style={{ width: '100%' }}>
                                     <Input
