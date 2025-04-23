@@ -1,8 +1,8 @@
 'use client';
 
-import React, { FC } from 'react';
+import React, { useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { Button } from 'antd';
+import { Button, Grid } from 'antd';
 import { PlayCircleOutlined, CalendarOutlined, EyeOutlined } from '@ant-design/icons';
 
 import type { MovieType } from 'apps/api/src/app/movies/movie.type';
@@ -12,6 +12,8 @@ import { MovieQualityTag } from '@/components/tag/movie-quality';
 import { MovieContentRating } from '@/components/tag/movie-content-rating';
 import styles from './movie-card.module.css';
 
+const { useBreakpoint } = Grid;
+
 interface MovieCardProps {
     movie: MovieType;
     loadType?: 'lazy' | 'eager';
@@ -19,8 +21,9 @@ interface MovieCardProps {
     hoverDelay?: number;
 }
 
-export const MovieCard: FC<MovieCardProps> = ({ movie, loadType, fromParam, hoverDelay }) => {
+export function MovieCard({ movie, loadType, fromParam, hoverDelay }: MovieCardProps) {
     const router = useRouter();
+    const { md } = useBreakpoint();
 
     const handleViewMovie = (e?: React.MouseEvent) => {
         if (e) e.stopPropagation();
@@ -43,6 +46,21 @@ export const MovieCard: FC<MovieCardProps> = ({ movie, loadType, fromParam, hove
 
         return text;
     };
+
+    const formatEpisodeCurrent = useCallback(() => {
+        if (!movie?.episodeCurrent) return '';
+
+        if (md) {
+            return movie.episodeCurrent;
+        }
+
+        if (movie.episodeCurrent?.length >= 14) {
+            const split = movie.episodeCurrent?.split(' ');
+            return split[split.length - 1];
+        }
+
+        return movie.episodeCurrent;
+    }, [movie?.episodeCurrent, md]);
 
     return (
         <div
@@ -154,11 +172,11 @@ export const MovieCard: FC<MovieCardProps> = ({ movie, loadType, fromParam, hove
                         )}
 
                         {movie.episodeCurrent && (
-                            <span className={styles.episodeSmall}>{movie.episodeCurrent}</span>
+                            <span className={styles.episodeSmall}>{formatEpisodeCurrent()}</span>
                         )}
                     </div>
                 </div>
             </div>
         </div>
     );
-};
+}
