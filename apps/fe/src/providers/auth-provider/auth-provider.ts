@@ -53,6 +53,21 @@ export const authProvider = (
                             },
                         };
 
+                        if (error.response?.status === 429) {
+                            resultResponse.error.name = 'Giới hạn yêu cầu';
+                            const resetTime =
+                                error.response.headers['x-ratelimit-reset-request-passwordless'];
+
+                            if (resetTime) {
+                                resultResponse.error.message = `Bạn đã yêu cầu quá nhiều lần. Vui lòng đợi ${resetTime} giây trước khi thử lại.`;
+                            } else {
+                                resultResponse.error.message =
+                                    'Bạn đã yêu cầu quá nhiều lần. Vui lòng thử lại sau.';
+                            }
+
+                            return resultResponse;
+                        }
+
                         if (error.response?.data?.errors) {
                             const errors = error.response.data.errors;
 
@@ -134,6 +149,21 @@ export const authProvider = (
                                 message: 'Đã xảy ra lỗi, vui lòng thử lại sau',
                             },
                         };
+
+                        if (error.response?.status === 429) {
+                            resultResponse.error.name = 'Giới hạn yêu cầu';
+                            const resetTime =
+                                error.response.headers['x-ratelimit-reset-request-passwordless'];
+
+                            if (resetTime) {
+                                resultResponse.error.message = `Bạn đã yêu cầu quá nhiều lần. Vui lòng đợi ${resetTime} giây trước khi thử lại.`;
+                            } else {
+                                resultResponse.error.message =
+                                    'Bạn đã yêu cầu quá nhiều lần. Vui lòng thử lại sau.';
+                            }
+
+                            return resultResponse;
+                        }
 
                         if (error.response?.data?.errors) {
                             const errors = error.response.data.errors;
