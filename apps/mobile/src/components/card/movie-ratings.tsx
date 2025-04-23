@@ -37,7 +37,7 @@ function MovieRatings({ imdbId, tmdbId, tmdbType, size = 'medium' }: MovieRating
             } catch (error) {
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 if ((error as any)?.name !== 'AbortError') {
-                    console.error('Error fetching IMDB data:', error);
+                    // console.error('Error fetching IMDB data:', error);
                     setImdbData({ rating: 'N/A', votes: 'N/A' });
                 }
             }
@@ -59,7 +59,7 @@ function MovieRatings({ imdbId, tmdbId, tmdbType, size = 'medium' }: MovieRating
             } catch (error) {
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 if ((error as any)?.name !== 'AbortError') {
-                    console.error('Error fetching TMDB data:', error);
+                    // console.error('Error fetching TMDB data:', error);
                     setTmdbData({ rating: 'N/A', votes: 'N/A' });
                 }
             }
