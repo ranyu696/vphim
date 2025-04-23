@@ -876,6 +876,11 @@ export function MoviePlay({ episodeSlug, movie }: MoviePlayProps) {
         toggleProxyStreaming,
     ]);
 
+    if (!movie || movie?.deletedAt) {
+        router.replace('/');
+        return <></>;
+    }
+
     return (
         <div
             style={{

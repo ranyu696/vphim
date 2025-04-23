@@ -26,7 +26,7 @@ export async function getMovieBySlug(slug: string): Promise<MovieType> {
         }),
         next: {
             revalidate: 3600,
-            tags: ['movies', slug],
+            tags: ['movies', slug, `/phim/${slug}`],
         },
     });
     if (!res.ok) {

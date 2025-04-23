@@ -5,6 +5,7 @@ import { MoviePlay } from '@/components/pages/movie/play';
 import { getEpisodeNameBySlug, getOptimizedImageUrl } from '@/libs/utils/movie.util';
 import { getMovieBySlug } from '@/services/movies';
 import { EpisodeBreadcrumb } from '@/components/breadcrumbs/episode-breadcrumb';
+import { redirect, RedirectType } from 'next/navigation';
 
 export const dynamic = 'force-dynamic';
 export const dynamicParams = true;
@@ -22,6 +23,14 @@ export async function generateMetadata(
     parent: ResolvingMetadata,
 ): Promise<Metadata> {
     const movie = await getMovieBySlug(params.slug);
+
+    if (!movie) {
+        return {
+            title: 'VePhim',
+            description: 'VePhim',
+        };
+    }
+
     const previousImages = (await parent).openGraph?.images || [];
 
     const episodeName = getEpisodeNameBySlug(movie, params.episode);
@@ -89,6 +98,11 @@ export async function generateMetadata(
 
 export default async function MovieEpisodePage({ params }: MovieEpisodePageProps) {
     const movie = await getMovieBySlug(params.slug);
+
+    if (!movie || movie?.deletedAt) {
+        return redirect('/', RedirectType.replace);
+    }
+
     const episodeName = getEpisodeNameBySlug(movie, params.episode);
 
     return (

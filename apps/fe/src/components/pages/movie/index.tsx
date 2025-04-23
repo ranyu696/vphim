@@ -528,6 +528,11 @@ export function Movie({ slug, movie: movieProp }: MovieProps) {
         );
     };
 
+    if (!movie || movie?.deletedAt) {
+        router.replace('/');
+        return <></>;
+    }
+
     return (
         <>
             {movie && (

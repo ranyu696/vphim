@@ -25,6 +25,7 @@ export async function POST(request: NextRequest) {
             // Revalidate the home page
             console.log('[Next.js] Revalidating /');
             revalidatePath('/');
+            revalidatePath('/phim');
         }
 
         if (movieSlug) {
@@ -34,6 +35,7 @@ export async function POST(request: NextRequest) {
             // Revalidate each movie page based on movieSlug
             for (const slug of movieSlugs) {
                 console.log(`[Next.js] Revalidating /phim/${slug}`);
+                revalidateTag(slug);
                 revalidatePath(`/phim/${slug}`);
             }
         }
