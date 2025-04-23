@@ -9,8 +9,8 @@ import {
     SerializeOptions,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
-import { ApiOkResponse, ApiTags, ApiBody } from '@nestjs/swagger';
-import { Throttle } from '@nestjs/throttler';
+import { ApiOkResponse, ApiTags, ApiBody, ApiTooManyRequestsResponse } from '@nestjs/swagger';
+import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 
 import { AuthService } from './auth.service';
 import {
@@ -24,6 +24,7 @@ import {
 } from './dtos';
 import { AuthRegisterConfirmDto } from './dtos/auth-register-confirm.dto';
 import { UserJwt } from './strategies/types';
+
 @ApiTags('auth')
 @Controller('auth')
 export class AuthController {
@@ -41,8 +42,10 @@ export class AuthController {
         return this.authService.registerConfirm(hash);
     }
 
-    @Throttle({ default: { limit: 1, ttl: 1000 * 60 * 3 } })
-    @ApiOkResponse()
+    @UseGuards(ThrottlerGuard)
+    @Throttle({ 'request-passwordless': { limit: 1, ttl: 1000 * 60 * 3 } })
+    @ApiOkResponse({ description: 'Request login passwordless' })
+    @ApiTooManyRequestsResponse({ description: 'Too many requests' })
     @HttpCode(HttpStatus.OK)
     @Post('login/pwdless')
     async loginPwdless(@Body() data: AuthLoginPasswordlessDto) {
