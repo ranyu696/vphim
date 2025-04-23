@@ -30,11 +30,6 @@ import { APP_GUARD } from '@nestjs/core';
                 return {
                     throttlers: [
                         {
-                            name: 'default',
-                            ttl: configService.get('THROTTLE_TTL') || 1,
-                            limit: configService.get('THROTTLE_LIMIT') || 1,
-                        },
-                        {
                             name: 'request-passwordless',
                             limit: 1,
                             ttl: 1000 * 60 * 3,
