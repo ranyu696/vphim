@@ -13,6 +13,7 @@ const slugify = (text: string) => {
 };
 
 const isValidUrl = (url: string) => {
+    if (!url) return true; // Empty is allowed as long as the other link is provided
     try {
         new URL(url);
         return true;
@@ -139,9 +140,9 @@ export const EpisodeModal = ({ visible, onClose, form, serverIndex, serverName }
                                                 message: 'Slug tập phim là bắt buộc',
                                             },
                                             {
-                                                pattern: /^[a-z0-9]+(?:-[a-z0-9]+)*$/,
+                                                pattern: /^[a-zA-Z0-9-_]+$/,
                                                 message:
-                                                    'Slug chỉ được chứa chữ cái thường, số và dấu gạch ngang',
+                                                    'Slug chỉ được chứa chữ cái, số, dấu gạch ngang và gạch dưới',
                                             },
                                         ]}
                                     >

@@ -9,7 +9,7 @@ import {
     Matches,
     ValidateNested,
 } from 'class-validator';
-import { EpisodeType, TmdbType, ImdbType } from '../movie.type';
+import { TmdbType, ImdbType } from '../movie.type';
 import { MovieContentRatingEnum, MovieStatusEnum, MovieTypeEnum } from '../movie.constant';
 import { Type } from 'class-transformer';
 import { IsOneOfNotEmpty } from 'apps/api/src/libs/decorators/one-of-many-not-empty.decorator';
@@ -169,8 +169,8 @@ export class CreateMovieInput {
     @IsMongoId({ each: true })
     countries?: string[];
 
-    @Field(() => [EpisodeType], { nullable: true })
-    episode?: EpisodeType[];
+    @Field(() => [EpisodeTypeInput], { nullable: true })
+    episode?: EpisodeTypeInput[];
 
     @Field(() => TmdbType, { nullable: true })
     tmdb?: TmdbType;

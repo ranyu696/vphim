@@ -134,6 +134,10 @@ export const ServerEpisodeSection = ({ form }) => {
                                                     required: true,
                                                     message: 'Tên máy chủ là bắt buộc',
                                                 },
+                                                {
+                                                    min: 2,
+                                                    message: 'Tên máy chủ phải có ít nhất 2 ký tự',
+                                                },
                                             ]}
                                             style={{ margin: 0 }}
                                         >
@@ -239,6 +243,11 @@ export const ServerEpisodeSection = ({ form }) => {
                                                                         message:
                                                                             'Tên tập phim là bắt buộc',
                                                                     },
+                                                                    {
+                                                                        min: 1,
+                                                                        message:
+                                                                            'Tên tập phim phải có ít nhất 1 ký tự',
+                                                                    },
                                                                 ]}
                                                                 style={{ margin: 0 }}
                                                             >
@@ -260,6 +269,11 @@ export const ServerEpisodeSection = ({ form }) => {
                                                                         message:
                                                                             'Slug tập phim là bắt buộc',
                                                                     },
+                                                                    {
+                                                                        pattern: /^[a-zA-Z0-9-_]+$/,
+                                                                        message:
+                                                                            'Slug chỉ được chứa chữ cái, số, dấu gạch ngang và gạch dưới',
+                                                                    },
                                                                 ]}
                                                                 style={{ margin: 0 }}
                                                             >
@@ -279,6 +293,41 @@ export const ServerEpisodeSection = ({ form }) => {
                                                                     'linkM3u8',
                                                                 ]}
                                                                 style={{ margin: 0 }}
+                                                                rules={[
+                                                                    {
+                                                                        validator: (_, value) => {
+                                                                            const linkEmbed =
+                                                                                form.getFieldValue([
+                                                                                    'episode',
+                                                                                    record.serverIndex,
+                                                                                    'serverData',
+                                                                                    record.episodeIndex,
+                                                                                    'linkEmbed',
+                                                                                ]);
+
+                                                                            if (
+                                                                                !value &&
+                                                                                !linkEmbed
+                                                                            ) {
+                                                                                return Promise.reject(
+                                                                                    'Phải nhập ít nhất một trong hai: Link M3U8 hoặc Link nhúng',
+                                                                                );
+                                                                            }
+
+                                                                            if (value) {
+                                                                                try {
+                                                                                    new URL(value);
+                                                                                } catch {
+                                                                                    return Promise.reject(
+                                                                                        'URL không hợp lệ',
+                                                                                    );
+                                                                                }
+                                                                            }
+
+                                                                            return Promise.resolve();
+                                                                        },
+                                                                    },
+                                                                ]}
                                                             >
                                                                 <Input />
                                                             </Form.Item>
@@ -296,6 +345,41 @@ export const ServerEpisodeSection = ({ form }) => {
                                                                     'linkEmbed',
                                                                 ]}
                                                                 style={{ margin: 0 }}
+                                                                rules={[
+                                                                    {
+                                                                        validator: (_, value) => {
+                                                                            const linkM3u8 =
+                                                                                form.getFieldValue([
+                                                                                    'episode',
+                                                                                    record.serverIndex,
+                                                                                    'serverData',
+                                                                                    record.episodeIndex,
+                                                                                    'linkM3u8',
+                                                                                ]);
+
+                                                                            if (
+                                                                                !value &&
+                                                                                !linkM3u8
+                                                                            ) {
+                                                                                return Promise.reject(
+                                                                                    'Phải nhập ít nhất một trong hai: Link M3U8 hoặc Link nhúng',
+                                                                                );
+                                                                            }
+
+                                                                            if (value) {
+                                                                                try {
+                                                                                    new URL(value);
+                                                                                } catch {
+                                                                                    return Promise.reject(
+                                                                                        'URL không hợp lệ',
+                                                                                    );
+                                                                                }
+                                                                            }
+
+                                                                            return Promise.resolve();
+                                                                        },
+                                                                    },
+                                                                ]}
                                                             >
                                                                 <Input />
                                                             </Form.Item>
@@ -371,6 +455,17 @@ export const ServerEpisodeSection = ({ form }) => {
                                                     total: episodeData.length,
                                                     showSizeChanger: true,
                                                     showQuickJumper: true,
+                                                    pageSizeOptions: ['10', '20', '50', '100'],
+                                                    locale: {
+                                                        items_per_page: '/ trang',
+                                                        jump_to: 'Đến',
+                                                        jump_to_confirm: 'Xác nhận',
+                                                        page: 'Trang',
+                                                        prev_page: 'Trang trước',
+                                                        next_page: 'Trang sau',
+                                                        prev_5: '5 trang trước',
+                                                        next_5: '5 trang sau',
+                                                    },
                                                 }}
                                                 onChange={handleTableChange}
                                             />
