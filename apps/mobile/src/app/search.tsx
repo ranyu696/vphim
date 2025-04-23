@@ -16,9 +16,8 @@ import {
     Divider,
     Button,
     Modal,
-    CheckBox,
-    Toggle,
     Card,
+    Toggle,
 } from '@ui-kitten/components';
 import {
     Search,
@@ -54,6 +53,24 @@ import { MOVIES_MOBILE_SEARCH_QUERY } from '~mb/queries/movie';
 import { SearchMovieCard } from '../components/card/search-movie-card';
 
 // Define movie type translations (matches web version)
+
+// Quality options (matches web version)
+const qualityOptions = [
+    { value: '4k', label: '4K', color: '#f5222d', textColor: '#fff' },
+    { value: 'fhd', label: 'FHD', color: '#52c41a', textColor: '#fff' },
+    { value: 'hd', label: 'HD', color: '#1890ff', textColor: '#fff' },
+    { value: 'sd', label: 'SD', color: '#13c2c2', textColor: '#000' },
+    { value: 'cam', label: 'CAM', color: '#a0d911', textColor: '#000' },
+];
+
+const contentRatingOptions = [
+    { value: 'p', label: 'P', color: '#52c41a', textColor: '#fff' },
+    { value: 'k', label: 'K', color: '#73d13d', textColor: '#000' },
+    { value: 't13', label: 'T13', color: '#1890ff', textColor: '#fff' },
+    { value: 't16', label: 'T16', color: '#fa8c16', textColor: '#fff' },
+    { value: 't18', label: 'T18', color: '#fa541c', textColor: '#fff' },
+    { value: 'c', label: 'C', color: '#f5222d', textColor: '#fff' },
+];
 
 // Status options (matches web version)
 const statusOptions = [
@@ -131,8 +148,12 @@ export default function SearchScreen() {
     // Filters state
     const [selectedType, setSelectedType] = useState<string | undefined>(undefined);
     const [selectedStatus, setSelectedStatus] = useState<string | undefined>(undefined);
-    const [isCinemaRelease, setIsCinemaRelease] = useState(false);
-    const [isCopyright, setIsCopyright] = useState(false);
+    const [selectedQuality, setSelectedQuality] = useState<string | undefined>(undefined);
+    const [selectedContentRating, setSelectedContentRating] = useState<string | undefined>(
+        undefined,
+    );
+    const [isCinemaRelease, setIsCinemaRelease] = useState<boolean | undefined>(undefined);
+    const [isCopyright, setIsCopyright] = useState<boolean | undefined>(undefined);
 
     const { data, isLoading, isError, hasNextPage, fetchNextPage, isFetchingNextPage, refetch } =
         useInfiniteList<MovieType>({
@@ -244,8 +265,12 @@ export default function SearchScreen() {
     const applyFilters = () => {
         handleFilterChange('type', selectedType);
         handleFilterChange('status', selectedStatus);
-        handleFilterChange('cinemaRelease', isCinemaRelease);
-        handleFilterChange('isCopyright', isCopyright);
+        handleFilterChange('quality', selectedQuality);
+        handleFilterChange('contentRating', selectedContentRating);
+        if (isCinemaRelease !== undefined) handleFilterChange('cinemaRelease', isCinemaRelease);
+        else handleFilterChange('cinemaRelease', undefined);
+        if (isCopyright !== undefined) handleFilterChange('isCopyright', isCopyright);
+        else handleFilterChange('isCopyright', undefined);
         handleFilterChange(
             'categories',
             selectedCategories.length > 0 ? selectedCategories : undefined,
@@ -257,8 +282,10 @@ export default function SearchScreen() {
     const clearFilters = () => {
         setSelectedType(undefined);
         setSelectedStatus(undefined);
-        setIsCinemaRelease(false);
-        setIsCopyright(false);
+        setSelectedQuality(undefined);
+        setSelectedContentRating(undefined);
+        setIsCinemaRelease(undefined);
+        setIsCopyright(undefined);
         setSelectedCategories([]);
         setSelectedRegions([]);
         setFilters((prevFilters) =>
@@ -451,34 +478,194 @@ export default function SearchScreen() {
                         </View>
                     </View>
 
+                    {/* Movie Quality Filter */}
+                    <View style={styles.filterSection}>
+                        <Text category="s1" style={styles.filterSectionTitle}>
+                            Chất lượng
+                        </Text>
+                        <View style={styles.chipContainer}>
+                            {qualityOptions.map((option) => (
+                                <TouchableOpacity
+                                    key={option.value}
+                                    style={[
+                                        styles.chip,
+                                        selectedQuality === option.value && styles.chipSelected,
+                                        {
+                                            borderColor: option.color,
+                                            backgroundColor:
+                                                selectedQuality === option.value
+                                                    ? option.color
+                                                    : theme['background-basic-color-1'],
+                                        },
+                                    ]}
+                                    onPress={() =>
+                                        setSelectedQuality((prev) =>
+                                            prev === option.value ? undefined : option.value,
+                                        )
+                                    }
+                                >
+                                    <Text
+                                        style={[
+                                            styles.chipText,
+                                            {
+                                                color:
+                                                    selectedQuality === option.value
+                                                        ? option.textColor
+                                                        : theme['text-basic-color'],
+                                                fontWeight: 'bold',
+                                            },
+                                        ]}
+                                    >
+                                        {option.label}
+                                    </Text>
+                                </TouchableOpacity>
+                            ))}
+                        </View>
+                    </View>
+
+                    {/* Content Rating Filter */}
+                    <View style={styles.filterSection}>
+                        <Text category="s1" style={styles.filterSectionTitle}>
+                            Phân loại độ tuổi
+                        </Text>
+                        <View style={styles.chipContainer}>
+                            {contentRatingOptions.map((option) => (
+                                <TouchableOpacity
+                                    key={option.value}
+                                    style={[
+                                        styles.chip,
+                                        selectedContentRating === option.value &&
+                                            styles.chipSelected,
+                                        {
+                                            borderColor: option.color,
+                                            backgroundColor:
+                                                selectedContentRating === option.value
+                                                    ? option.color
+                                                    : theme['background-basic-color-1'],
+                                        },
+                                    ]}
+                                    onPress={() =>
+                                        setSelectedContentRating((prev) =>
+                                            prev === option.value ? undefined : option.value,
+                                        )
+                                    }
+                                >
+                                    <Text
+                                        style={[
+                                            styles.chipText,
+                                            {
+                                                color:
+                                                    selectedContentRating === option.value
+                                                        ? option.textColor
+                                                        : theme['text-basic-color'],
+                                                fontWeight: 'bold',
+                                            },
+                                        ]}
+                                    >
+                                        {option.label}
+                                    </Text>
+                                </TouchableOpacity>
+                            ))}
+                        </View>
+                    </View>
+
                     <View style={styles.filterSection}>
                         <Text category="s1" style={styles.filterSectionTitle}>
                             Tùy chọn khác
                         </Text>
-                        <View style={styles.checkboxContainer}>
-                            <CheckBox
-                                checked={isCinemaRelease}
-                                onChange={setIsCinemaRelease}
-                                style={styles.checkbox}
-                            >
-                                {() => (
-                                    <Text style={{ color: theme['text-basic-color'] }}>
-                                        Phim chiếu rạp
-                                    </Text>
-                                )}
-                            </CheckBox>
-
-                            <CheckBox
-                                checked={isCopyright}
-                                onChange={setIsCopyright}
-                                style={styles.checkbox}
-                            >
-                                {() => (
-                                    <Text style={{ color: theme['text-basic-color'] }}>
-                                        Phim bản quyền
-                                    </Text>
-                                )}
-                            </CheckBox>
+                        <View style={{ marginBottom: 12 }}>
+                            <Text style={{ color: theme['text-hint-color'], marginBottom: 4 }}>
+                                Phim chiếu rạp:
+                            </Text>
+                            <View style={{ flexDirection: 'row', gap: 8 }}>
+                                {['Tất cả', 'Có', 'Không'].map((label, idx) => {
+                                    const value = idx === 0 ? undefined : idx === 1 ? true : false;
+                                    const selected =
+                                        isCinemaRelease === value ||
+                                        (idx === 0 && isCinemaRelease === undefined);
+                                    return (
+                                        <TouchableOpacity
+                                            key={label}
+                                            style={[
+                                                styles.chip,
+                                                {
+                                                    paddingHorizontal: 16,
+                                                    marginRight: idx < 2 ? 8 : 0,
+                                                },
+                                                selected && styles.chipSelected,
+                                                {
+                                                    borderColor: theme['border-basic-color-3'],
+                                                    backgroundColor: selected
+                                                        ? theme['color-primary-100']
+                                                        : theme['background-basic-color-1'],
+                                                },
+                                            ]}
+                                            onPress={() => setIsCinemaRelease(value)}
+                                        >
+                                            <Text
+                                                style={[
+                                                    styles.chipText,
+                                                    {
+                                                        color: selected
+                                                            ? theme['color-primary-600']
+                                                            : theme['text-basic-color'],
+                                                        fontWeight: selected ? 'bold' : 'normal',
+                                                    },
+                                                ]}
+                                            >
+                                                {label}
+                                            </Text>
+                                        </TouchableOpacity>
+                                    );
+                                })}
+                            </View>
+                        </View>
+                        <View style={{ marginBottom: 12 }}>
+                            <Text style={{ color: theme['text-hint-color'], marginBottom: 4 }}>
+                                Phim bản quyền:
+                            </Text>
+                            <View style={{ flexDirection: 'row', gap: 8 }}>
+                                {['Tất cả', 'Có', 'Không'].map((label, idx) => {
+                                    const value = idx === 0 ? undefined : idx === 1 ? true : false;
+                                    const selected =
+                                        isCopyright === value ||
+                                        (idx === 0 && isCopyright === undefined);
+                                    return (
+                                        <TouchableOpacity
+                                            key={label}
+                                            style={[
+                                                styles.chip,
+                                                {
+                                                    paddingHorizontal: 16,
+                                                    marginRight: idx < 2 ? 8 : 0,
+                                                },
+                                                selected && styles.chipSelected,
+                                                {
+                                                    borderColor: theme['border-basic-color-3'],
+                                                    backgroundColor: selected
+                                                        ? theme['color-primary-100']
+                                                        : theme['background-basic-color-1'],
+                                                },
+                                            ]}
+                                            onPress={() => setIsCopyright(value)}
+                                        >
+                                            <Text
+                                                style={[
+                                                    styles.chipText,
+                                                    {
+                                                        color: selected
+                                                            ? theme['color-primary-600']
+                                                            : theme['text-basic-color'],
+                                                        fontWeight: selected ? 'bold' : 'normal',
+                                                    },
+                                                ]}
+                                            >
+                                                {label}
+                                            </Text>
+                                        </TouchableOpacity>
+                                    );
+                                })}
+                            </View>
                         </View>
                     </View>
 
