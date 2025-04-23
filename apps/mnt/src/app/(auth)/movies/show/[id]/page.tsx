@@ -300,6 +300,18 @@ export default function MovieShowPage({ params }: { params: { id: string } }) {
                                     onChange: handlePageChange,
                                     onShowSizeChange: handlePageChange,
                                     showTotal: (total) => `Tổng cộng ${total} tập`,
+                                    locale: {
+                                        items_per_page: '/ trang',
+                                        jump_to: 'Đến trang',
+                                        page: 'Trang',
+                                        prev_page: 'Trang trước',
+                                        next_page: 'Trang tiếp',
+                                        prev_5: '5 trang trước',
+                                        next_5: '5 trang tiếp',
+                                        prev_3: '3 trang trước',
+                                        next_3: '3 trang tiếp',
+                                        jump_to_confirm: 'Xác nhận',
+                                    },
                                 }}
                                 bordered
                             />

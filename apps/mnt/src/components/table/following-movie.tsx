@@ -94,6 +94,13 @@ export function FollowingMovieTable({ movies = [], loading = false }: FollowingM
                     showTotal: (total, range) =>
                         `Hiển thị ${range[0]}-${range[1]} trên tổng ${total} kết quả`,
                     onChange: (page, pageSize) => setPagination({ current: page, pageSize }),
+                    simple: true,
+                    locale: {
+                        items_per_page: '/ trang',
+                        jump_to: 'Đến',
+                        jump_to_confirm: 'Xác nhận',
+                        page: 'Trang',
+                    },
                 }}
                 size="small"
                 columns={[

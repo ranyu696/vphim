@@ -510,6 +510,12 @@ export function MovieTableMnt({ type }: MovieTableMntProps) {
                     size: 'small',
                     simple: true,
                     responsive: true,
+                    locale: {
+                        items_per_page: '/ trang',
+                        jump_to: 'Đến',
+                        jump_to_confirm: 'Xác nhận',
+                        page: 'Trang',
+                    },
                 }}
                 size="small"
                 columns={[

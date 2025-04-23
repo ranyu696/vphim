@@ -171,7 +171,7 @@ export function BaseResourceList<
                         simple: true,
                         responsive: true,
                         locale: {
-                            items_per_page: 'bản ghi trên trang',
+                            items_per_page: '/ trang',
                             jump_to: 'Đến trang',
                             page: 'Trang',
                             prev_page: 'Trang trước',
@@ -181,7 +181,6 @@ export function BaseResourceList<
                             prev_3: '3 trang trước',
                             next_3: '3 trang tiếp',
                             jump_to_confirm: 'Xác nhận',
-                            page_size: 'Bản ghi trên trang',
                         },
                     }}
                     size="small"

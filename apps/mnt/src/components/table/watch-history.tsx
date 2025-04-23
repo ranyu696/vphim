@@ -244,6 +244,15 @@ export function WatchHistoryTable({ history = [], loading = false }: WatchHistor
                 defaultPageSize: 10,
                 showSizeChanger: true,
                 pageSizeOptions: ['10', '20', '50'],
+                simple: true,
+                showTotal: (total, range) =>
+                    `Hiển thị ${range[0]}-${range[1]} trên tổng ${total} kết quả`,
+                locale: {
+                    items_per_page: '/ trang',
+                    jump_to: 'Đến',
+                    jump_to_confirm: 'Xác nhận',
+                    page: 'Trang',
+                },
             }}
         />
     );

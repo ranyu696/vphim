@@ -217,6 +217,24 @@ export default function UserList() {
                     {...tableProps}
                     columns={columns}
                     rowKey={(record) => record._id.toString()}
+                    pagination={{
+                        ...tableProps.pagination,
+                        simple: true,
+                        showTotal: (total, range) =>
+                            `Hiển thị ${range[0]}-${range[1]} trên tổng ${total} kết quả`,
+                        locale: {
+                            items_per_page: '/ trang',
+                            jump_to: 'Đến trang',
+                            page: 'Trang',
+                            prev_page: 'Trang trước',
+                            next_page: 'Trang tiếp',
+                            prev_5: '5 trang trước',
+                            next_5: '5 trang tiếp',
+                            prev_3: '3 trang trước',
+                            next_3: '3 trang tiếp',
+                            jump_to_confirm: 'Xác nhận',
+                        },
+                    }}
                 />
             </Space>
         </List>
