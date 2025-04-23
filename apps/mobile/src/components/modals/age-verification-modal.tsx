@@ -184,7 +184,7 @@ export const AgeVerificationModal: React.FC<AgeVerificationModalProps> = ({
             </Text>,
         ];
 
-        if (contentRating) {
+        if (contentRating && getAgreementText(contentRating) !== '') {
             reasons.push(
                 <Text
                     key={`agree-${contentRating}`}
@@ -196,7 +196,7 @@ export const AgeVerificationModal: React.FC<AgeVerificationModalProps> = ({
             );
         }
 
-        if (contentRating) {
+        if (contentRating && getAgreementText(contentRating) !== '') {
             reasons.push(
                 <Text
                     key="agree-understand"
@@ -219,7 +219,7 @@ export const AgeVerificationModal: React.FC<AgeVerificationModalProps> = ({
     const getContentRestrictionInfo = (): ReactNode[] => {
         const info: ReactNode[] = [];
 
-        if (isRestrictedContent && contentRating) {
+        if (isRestrictedContent && contentRating && getAgreementText(contentRating) !== '') {
             info.push(
                 <View key={`info-${contentRating}`} style={styles.tagRow}>
                     <Text style={[styles.reasonText, { color: theme['text-basic-color'] }]}>
