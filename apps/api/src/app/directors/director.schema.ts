@@ -17,7 +17,7 @@ export class Director extends AbstractDocument {
     originalName: string;
 
     @ApiProperty()
-    @Prop({ required: true, type: String })
+    @Prop({ required: true, type: String, unique: true })
     slug: string;
 
     @ApiProperty()
