@@ -869,29 +869,33 @@ export abstract class BaseCrawler implements OnModuleInit, OnModuleDestroy {
                             } else {
                                 // Create new actor with simple slug
                                 try {
-                                    await this.actorRepo.updateOne({
-                                        filterQuery: { slug: simpleSlug },
-                                        updateQuery: {
-                                            $setOnInsert: {
-                                                name: cast.name,
-                                                originalName: cast.original_name || cast.name,
-                                                slug: simpleSlug,
-                                                tmdbPersonId: cast.id,
-                                                thumbUrl: imgUrl,
-                                                posterUrl: imgUrl,
-                                            },
+                                    // Create a new document without specifying _id
+                                    const newActor = await this.actorRepo.create({
+                                        document: {
+                                            name: cast.name,
+                                            originalName: cast.original_name || cast.name,
+                                            slug: simpleSlug,
+                                            tmdbPersonId: cast.id,
+                                            thumbUrl: imgUrl,
+                                            posterUrl: imgUrl,
                                         },
-                                        queryOptions: { upsert: true },
                                     });
 
-                                    // Get the newly created actor
-                                    actor = await this.actorRepo.findOne({
-                                        filterQuery: { slug: simpleSlug },
-                                    });
+                                    actor = newActor;
                                 } catch (err) {
-                                    this.logger.error(
-                                        `Error upserting actor with slug ${simpleSlug}: ${err.message}`,
-                                    );
+                                    if (err.code === 11000) {
+                                        // Handle duplicate key error by fetching the existing actor
+                                        this.logger.warn(
+                                            `Duplicate key error for actor ${simpleSlug}, fetching existing record`,
+                                        );
+                                        actor = await this.actorRepo.findOne({
+                                            filterQuery: { slug: simpleSlug },
+                                        });
+                                    } else {
+                                        this.logger.error(
+                                            `Error creating actor with slug ${simpleSlug}: ${err.message}`,
+                                        );
+                                    }
                                 }
                             }
                         }
@@ -945,31 +949,42 @@ export abstract class BaseCrawler implements OnModuleInit, OnModuleDestroy {
                 processedSlugs.add(slug);
 
                 try {
-                    // Use updateOne with upsert to prevent duplicates
-                    await this.actorRepo.updateOne({
+                    // First check if actor already exists
+                    let actor = await this.actorRepo.findOne({
                         filterQuery: { slug },
-                        updateQuery: {
-                            $setOnInsert: {
+                    });
+
+                    if (!actor) {
+                        // If not found, create a new actor
+                        actor = await this.actorRepo.create({
+                            document: {
                                 name: actorName,
                                 originalName: actorName,
                                 slug,
                             },
-                        },
-                        queryOptions: { upsert: true },
-                    });
-
-                    // Get the actor after upsert
-                    const actor = await this.actorRepo.findOne({
-                        filterQuery: { slug },
-                    });
+                        });
+                    }
 
                     if (actor) {
                         actorIds.push(actor._id);
                     }
                 } catch (err) {
-                    this.logger.error(
-                        `Error upserting manual actor with slug ${slug}: ${err.message}`,
-                    );
+                    if (err.code === 11000) {
+                        // Handle duplicate key error by fetching the existing actor
+                        this.logger.warn(
+                            `Duplicate key error for actor ${slug}, fetching existing record`,
+                        );
+                        const actor = await this.actorRepo.findOne({
+                            filterQuery: { slug },
+                        });
+                        if (actor) {
+                            actorIds.push(actor._id);
+                        }
+                    } else {
+                        this.logger.error(
+                            `Error processing manual actor with slug ${slug}: ${err.message}`,
+                        );
+                    }
                 }
             }
 
@@ -1050,30 +1065,32 @@ export abstract class BaseCrawler implements OnModuleInit, OnModuleDestroy {
                             } else {
                                 // Create new director with simple slug
                                 try {
-                                    await this.directorRepo.updateOne({
-                                        filterQuery: { slug: simpleSlug },
-                                        updateQuery: {
-                                            $setOnInsert: {
-                                                name: director.name,
-                                                originalName:
-                                                    director.original_name || director.name,
-                                                slug: simpleSlug,
-                                                tmdbPersonId: director.id,
-                                                thumbUrl: imgUrl,
-                                                posterUrl: imgUrl,
-                                            },
+                                    const newDirector = await this.directorRepo.create({
+                                        document: {
+                                            name: director.name,
+                                            originalName: director.original_name || director.name,
+                                            slug: simpleSlug,
+                                            tmdbPersonId: director.id,
+                                            thumbUrl: imgUrl,
+                                            posterUrl: imgUrl,
                                         },
-                                        queryOptions: { upsert: true },
                                     });
 
-                                    // Get the newly created director
-                                    existingDirector = await this.directorRepo.findOne({
-                                        filterQuery: { slug: simpleSlug },
-                                    });
+                                    existingDirector = newDirector;
                                 } catch (err) {
-                                    this.logger.error(
-                                        `Error upserting director with slug ${simpleSlug}: ${err.message}`,
-                                    );
+                                    if (err.code === 11000) {
+                                        // Handle duplicate key error by fetching the existing director
+                                        this.logger.warn(
+                                            `Duplicate key error for director ${simpleSlug}, fetching existing record`,
+                                        );
+                                        existingDirector = await this.directorRepo.findOne({
+                                            filterQuery: { slug: simpleSlug },
+                                        });
+                                    } else {
+                                        this.logger.error(
+                                            `Error creating director with slug ${simpleSlug}: ${err.message}`,
+                                        );
+                                    }
                                 }
                             }
                         }
@@ -1116,31 +1133,42 @@ export abstract class BaseCrawler implements OnModuleInit, OnModuleDestroy {
                 processedSlugs.add(slug);
 
                 try {
-                    // Use updateOne with upsert to prevent duplicates
-                    await this.directorRepo.updateOne({
+                    // Check if director already exists
+                    let director = await this.directorRepo.findOne({
                         filterQuery: { slug },
-                        updateQuery: {
-                            $setOnInsert: {
+                    });
+
+                    if (!director) {
+                        // Create new director
+                        director = await this.directorRepo.create({
+                            document: {
                                 name: directorName,
                                 originalName: directorName,
                                 slug,
                             },
-                        },
-                        queryOptions: { upsert: true },
-                    });
-
-                    // Get the director after upsert
-                    const director = await this.directorRepo.findOne({
-                        filterQuery: { slug },
-                    });
+                        });
+                    }
 
                     if (director) {
                         directorIds.push(director._id);
                     }
                 } catch (err) {
-                    this.logger.error(
-                        `Error upserting manual director with slug ${slug}: ${err.message}`,
-                    );
+                    if (err.code === 11000) {
+                        // Handle duplicate key error by fetching the existing director
+                        this.logger.warn(
+                            `Duplicate key error for director ${slug}, fetching existing record`,
+                        );
+                        const director = await this.directorRepo.findOne({
+                            filterQuery: { slug },
+                        });
+                        if (director) {
+                            directorIds.push(director._id);
+                        }
+                    } else {
+                        this.logger.error(
+                            `Error processing manual director with slug ${slug}: ${err.message}`,
+                        );
+                    }
                 }
             }
         }
