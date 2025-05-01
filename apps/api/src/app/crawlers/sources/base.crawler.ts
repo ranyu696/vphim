@@ -905,7 +905,11 @@ export abstract class BaseCrawler implements OnModuleInit, OnModuleDestroy {
                         }
                     }
 
-                    return actorIds;
+                    if (actorIds?.length !== 0) {
+                        return actorIds;
+                    }
+
+                    this.logger.warn(`No actors found for TMDB ID ${externalData?.tmdbData?.id}`);
                 }
             } catch (error) {
                 this.logger.error(`Error processing TMDB actors: ${error.message}`);
