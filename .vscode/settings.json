@@ -70,5 +70,13 @@
         "zremrangebyscore",
         "zscore"
     ],
-    "conventionalCommits.scopes": ["be/i18n", "api", "fe", "mnt", "mobile", "ci"]
+    "conventionalCommits.scopes": [
+        "be/i18n",
+        "api",
+        "fe",
+        "mnt",
+        "mobile",
+        "ci"
+    ],
+    "nxConsole.generateAiAgentRules": true
 }
