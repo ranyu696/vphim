@@ -1,30 +1,30 @@
-## Current tasks from user prompt:
-Create a feature for saving user history watching movie, saving what movies, what episode, what server they watch.
+## 当前任务:
+创建用户观影历史记录功能,用于保存用户观看的电影、剧集和服务器信息。
 
-## Plan (simple):
-Create a new module that allows tracking of what movies, episodes, and servers users have watched, with progress tracking.
+## 简单计划:
+创建一个新模块用于追踪用户观看的电影、剧集和服务器信息,并记录观看进度。
 
-## Steps:
-1. Create WatchHistory schema with fields for user, movie, episode, server, and progress
-2. Implement repository for database operations
-3. Implement service for business logic
-4. Create DTOs and GraphQL inputs/types
-5. Implement resolver for GraphQL API
-6. Implement controller for REST API
-7. Register module in app.module.ts
+## 步骤:
+1. 创建 WatchHistory 数据模型,包含用户、电影、剧集、服务器和进度字段
+2. 实现数据库操作的数据仓库层
+3. 实现业务逻辑的服务层
+4. 创建 REST API 的 DTO 和 GraphQL 的输入/类型定义
+5. 实现 GraphQL API 的解析器
+6. 实现 REST API 的控制器
+7. 在 app.module.ts 中注册模块
 
-## Things done:
-- Created WatchHistory schema with fields for tracking user, movie, episode, server info
-- Added WatchProgress embedded schema for tracking watching progress
-- Implemented WatchHistoryRepository for database operations
-- Implemented WatchHistoryService with methods for saving and retrieving history
-- Created DTOs for REST API and GraphQL inputs/types
-- Implemented WatchHistoryResolver for GraphQL API
-- Implemented WatchHistoryController for REST API
-- Created WatchHistoryModule and registered it in app.module.ts
+## 已完成:
+- 创建了 WatchHistory 数据模型,包含用户、电影、剧集和服务器信息字段
+- 添加了 WatchProgress 嵌入式模型用于记录观看进度
+- 实现了 WatchHistoryRepository 用于数据库操作
+- 实现了 WatchHistoryService 用于保存和获取历史记录
+- 创建了 REST API 的 DTO 和 GraphQL 的输入/类型定义
+- 实现了 WatchHistoryResolver 用于 GraphQL API
+- 实现了 WatchHistoryController 用于 REST API
+- 创建了 WatchHistoryModule 并在 app.module.ts 中注册
 
-## Things not done yet:
-- Add front-end integration to store watch history during playback
-- Create UI components to display watch history
-- Implement "Continue Watching" feature on the homepage
-- Add functionality to resume watching from the saved timestamp
+## 待完成:
+- 添加前端集成,在播放过程中保存观看历史
+- 创建显示观看历史的 UI 组件
+- 在首页实现"继续观看"功能
+- 添加从保存的时间戳继续观看的功能
